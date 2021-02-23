@@ -58,6 +58,30 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define ON_LED1_Pin GPIO_PIN_1
+#define ON_LED1_GPIO_Port GPIOD
+#define OUT1_OP4_Pin GPIO_PIN_0
+#define OUT1_OP4_GPIO_Port GPIOA
+#define OUT1_OP3_Pin GPIO_PIN_1
+#define OUT1_OP3_GPIO_Port GPIOA
+#define OUT1_OP2_Pin GPIO_PIN_2
+#define OUT1_OP2_GPIO_Port GPIOA
+#define OUT1_OP1_Pin GPIO_PIN_3
+#define OUT1_OP1_GPIO_Port GPIOA
+#define OUT1_OP8_Pin GPIO_PIN_4
+#define OUT1_OP8_GPIO_Port GPIOA
+#define OUT1_OP7_Pin GPIO_PIN_5
+#define OUT1_OP7_GPIO_Port GPIOA
+#define OUT1_OP6_Pin GPIO_PIN_6
+#define OUT1_OP6_GPIO_Port GPIOA
+#define OUT1_OP5_Pin GPIO_PIN_7
+#define OUT1_OP5_GPIO_Port GPIOA
+#define ON_BUZZ_Pin GPIO_PIN_0
+#define ON_BUZZ_GPIO_Port GPIOB
+#define OUT1_OP12_Pin GPIO_PIN_1
+#define OUT1_OP12_GPIO_Port GPIOB
+#define OUT1_OP11_Pin GPIO_PIN_2
+#define OUT1_OP11_GPIO_Port GPIOB
 #define GPIO_W5500_CS_Pin GPIO_PIN_12
 #define GPIO_W5500_CS_GPIO_Port GPIOB
 #define SPI1_SCK_Pin GPIO_PIN_13
@@ -68,6 +92,14 @@ void Error_Handler(void);
 #define SPI1_MOSI_GPIO_Port GPIOB
 #define Rst_Pin GPIO_PIN_8
 #define Rst_GPIO_Port GPIOA
+#define OUT1_OP15_Pin GPIO_PIN_3
+#define OUT1_OP15_GPIO_Port GPIOB
+#define OUT1_OP16_Pin GPIO_PIN_4
+#define OUT1_OP16_GPIO_Port GPIOB
+#define OUT1_OP14_Pin GPIO_PIN_5
+#define OUT1_OP14_GPIO_Port GPIOB
+#define OUT1_OP13_Pin GPIO_PIN_6
+#define OUT1_OP13_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
