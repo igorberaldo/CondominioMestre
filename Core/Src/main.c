@@ -64,16 +64,7 @@ const osThreadAttr_t ethernetTask_attributes = {
   .stack_size = 128 * 4
 };
 /* USER CODE BEGIN PV */char writeValue[60];
-uint8_t R1 = 0, R2 = 0, R3 = 0, R4 = 0;
-uint8_t S1 = 0;
-uint8_t S2 = 0;
-uint8_t S3 = 0;
-uint8_t S4 = 0;
-uint8_t S5 = 0;
-uint8_t S6 = 0;
-uint8_t S7 = 0;
-uint8_t S8 = 0;
-#define DATA_BUF_SIZE   2048
+#define DATA_BUF_SIZE   4096
 uint8_t gDATABUF[DATA_BUF_SIZE];
 
 ///////////////////////////////////
@@ -504,102 +495,6 @@ int32_t tcp_http_mt(uint8_t sn, uint8_t* buf, uint16_t port)
 				if ((url != NULL)&&(strncmp("/favicon.ico",url,12) != 0))
 				{
 					flagHtmlGen = 1;
-					if (strncmp("/rele/R1/ON",url,6) == 0)
-					{
-						R1 = 1;
-					}
-					else if (strncmp("/rele/R1/OFF",url,12) == 0)
-					{
-						R1 = 0;
-					}
-					else if (strncmp("/rele/R2/ON",url,12) == 0)
-					{
-						R2 = 1;
-					}
-					else if (strncmp("/rele/R2/OFF",url,12) == 0)
-					{
-						R2 = 0;
-					}
-					else if (strncmp("/rele/R3/ON",url,12) == 0)
-					{
-						R3 = 1;
-					}
-					else if (strncmp("/rele/R3/OFF",url,12) == 0)
-					{
-						R3 = 0;
-					}
-					else if (strncmp("/rele/R4/ON",url,12) == 0)
-					{
-						R4 = 1;
-					}
-					else if (strncmp("/rele/R4/OFF",url,12) == 0)
-					{
-						R4 = 0;
-					}
-					else if (strncmp("/entradas/S1/ON",url,16) == 0)
-					{
-						S1 = 1;
-					}
-					else if (strncmp("/entradas/S1/OFF",url,16) == 0)
-					{
-						S1 = 0;
-					}
-					else if (strncmp("/entradas/S2/ON",url,16) == 0)
-					{
-						S2 = 1;
-					}
-					else if (strncmp("/entradas/S2/OFF",url,16) == 0)
-					{
-						S2 = 0;
-					}
-					else if (strncmp("/entradas/S3/ON",url,16) == 0)
-					{
-						S3 = 1;
-					}
-					else if (strncmp("/entradas/S3/OFF",url,16) == 0)
-					{
-						S3 = 0;
-					}
-					else if (strncmp("/entradas/S4/ON",url,16) == 0)
-					{
-						S4 = 1;
-					}
-					else if (strncmp("/entradas/S4/OFF",url,16) == 0)
-					{
-						S4 = 0;
-					}
-					else if (strncmp("/entradas/S5/ON",url,16) == 0)
-					{
-						S5 = 1;
-					}
-					else if (strncmp("/entradas/S5/OFF",url,16) == 0)
-					{
-						S5 = 0;
-					}
-					else if (strncmp("/entradas/S6/ON",url,16) == 0)
-					{
-						S6 = 1;
-					}
-					else if (strncmp("/entradas/S6/OFF",url,16) == 0)
-					{
-						S6 = 0;
-					}
-					else if (strncmp("/entradas/S7/ON",url,16) == 0)
-					{
-						S7 = 1;
-					}
-					else if (strncmp("/entradas/S7/OFF",url,16) == 0)
-					{
-						S7 = 0;
-					}
-					else if (strncmp("/entradas/S8/ON",url,16) == 0)
-					{
-						S8 = 1;
-					}
-					else if (strncmp("/entradas/S8/OFF",url,16) == 0)
-					{
-						S8 = 0;
-					}
 
 					//Gera��o da HTML
 					if(flagHtmlGen == 1)
@@ -608,116 +503,25 @@ int32_t tcp_http_mt(uint8_t sn, uint8_t* buf, uint16_t port)
 						{
 							strcpy((char*)buf,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n");
 							strcat((char*)buf, "<html><head>");
-							strcat((char*)buf, "<title>Escrava Config</title>");
-							strcat((char*)buf, "<link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css' rel='stylesheet'></link>");
+							strcat((char*)buf, "<title>Mestre Config</title>");
 							strcat((char*)buf, "</head>");
 							strcat((char*)buf, "<body>");
-							strcat((char*)buf, "<div class = 'rede'>");
-							strcat((char*)buf, "<title> Config Placa Escrava </title>");
-							strcat((char*)buf, "<b><center>Configuracao da Placa de rede Escrava</b></center>");
-							strcat((char*)buf, "<p></p>");
+							strcat((char*)buf, "<b><center>Configuracao da Placa de rede</b></center><br>");
 							strcat((char*)buf, "<center><form action=''>");
-							strcat((char*)buf, "IP: <input type='text' name='ip'><br>");
-							strcat((char*)buf, "<p></p>");
-							strcat((char*)buf, "Mascara: <input type='text' name='mascara'><br>");
-							strcat((char*)buf, "<p></p>");
-							strcat((char*)buf, "Porta: <input type='text' name='porta'><br>");
-							strcat((char*)buf, "<p></p>");
-							strcat((char*)buf, "Gateway: <input type='text' name='gateway'><br>");
-							strcat((char*)buf, "<p></p>");
-							strcat((char*)buf, "DNS 1: <input type='text' name='dns1'><br>");
-							strcat((char*)buf, "<p></p>");
-							strcat((char*)buf, "<p></p>");
-							strcat((char*)buf, "DNS 2: <input type='text' name='dns2'><br>");
-							strcat((char*)buf, "<p></p>");
+							strcat((char*)buf, "IP: <input type='text' name='ip'>		Mascara: <input type='text' name='mascara'><br><br>");
+							strcat((char*)buf, "Porta: <input type='text' name='porta'>		Gateway: <input type='text' name='gateway'><br><br>");
+							strcat((char*)buf, "DNS 1: <input type='text' name='dns1'>		DNS 2: <input type='text' name='dns2'><br><br>");
 							strcat((char*)buf, "DHCP: <button>On</button>  <button>Off</button>");
 							strcat((char*)buf, "</center></form>");
-							strcat((char*)buf, "<center><button>Salvar</button></center></div>");
-							strcat((char*)buf, "<center>");
-							strcat((char*)buf, "<p></p>");
-							strcat((char*)buf, "<a href='http://192.168.0.231'>Voltar</a><br>");
-							strcat((char*)buf, "</center>");
-							strcat((char*)buf, "</body>");
-							strcat((char*)buf, "</html>");
-						}
-						else if(strncmp("/rele", url, 6) == 0)
-						{
-							strcpy((char*)buf,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n");
-							strcat((char*)buf, "<html><head>");
-							strcat((char*)buf, "<title>Escrava Config</title>");
-							strcat((char*)buf, "<link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css' rel='stylesheet'></link>");
-							strcat((char*)buf, "</head>");
-							strcat((char*)buf, "<body>");
-
-							strcat((char*)buf, "<b><center>Configuracao dos reles</b> </center>");
-							strcat((char*)buf, "<center><table border='1'>");
-							strcat((char*)buf, "<tr><td><b>Rele Numero</b></td>");
-							strcat((char*)buf, "<td><b>Estado do rele</b></td>");
-							strcat((char*)buf, "<td><b><center>Tempo atracado (seg)</center></b></td>");
-							strcat((char*)buf, "<td><b><center>Tipo de Acionamento</center></b></td>");
-							strcat((char*)buf, "<td><b><center>Acionamento</center></b></td></tr>");
-
-							strcat((char*)buf, "<tr><td><center>1</center></td>");
-							strcat((char*)buf, "<td><center>False</center></td>");
-							strcat((char*)buf, "<td><input type='text' name='tempo1'><br></td>");
-							strcat((char*)buf, "<td><center>");
-							strcat((char*)buf, "<select id='Acionamento1'>");
-							strcat((char*)buf, "<option value='0'>Pulso</option>");
-							strcat((char*)buf, "<option value='1'>Retencao</option>");
-							strcat((char*)buf, "</select></center></td>");
-							strcat((char*)buf, "<td><center><a href=''> Aberto </a></tr>");
-
-							strcat((char*)buf, "<tr><td><center>2</center></td>");
-							strcat((char*)buf, "<td><center>False</center></td>");
-							strcat((char*)buf, "<td><input type='text' name='tempo2'><br></td>");
-							strcat((char*)buf, "<td><center>");
-							strcat((char*)buf, "<select id='Acionamento2'>");
-							strcat((char*)buf, "<option value='0'>Pulso</option>");
-							strcat((char*)buf, "<option value='1'>Retencao</option>");
-							strcat((char*)buf, "</select></center></td>");
-							strcat((char*)buf, "<td><center><a href=''> Aberto </a></tr>");
-
-							strcat((char*)buf, "<tr><td><center>3</center></td>");
-							strcat((char*)buf, "<td><center>False</center></td>");
-							strcat((char*)buf, "<td><input type='text' name='tempo3'><br></td>");
-							strcat((char*)buf, "<td><center>");
-							strcat((char*)buf, "<select id='Acionamento3'>");
-							strcat((char*)buf, "<option value='0'>Pulso</option>");
-							strcat((char*)buf, "<option value='1'>Retencao</option>");
-							strcat((char*)buf, "</select></center></td>");
-							strcat((char*)buf, "<td><center><a href=''> Aberto </a></tr>");
-
-							strcat((char*)buf, "<tr><td><center>4</center></td>");
-							strcat((char*)buf, "<td><center>False</center></td>");
-							strcat((char*)buf, "<td><input type='text' name='tempo4'><br></td>");
-							strcat((char*)buf, "<td><center>");
-							strcat((char*)buf, "<select id='Acionamento4'>");
-							strcat((char*)buf, "<option value='0'>Pulso</option>");
-							strcat((char*)buf, "<option value='1'>Retencao</option>");
-							strcat((char*)buf, "</select></center></td>");
-							strcat((char*)buf, "<td><center><a href=''> Aberto </a></tr>");
-
-							strcat((char*)buf, "</table></center>");
-							strcat((char*)buf, "<center><label for='rele'>Rele de intertravamento:</label>");
-							strcat((char*)buf, "<select name='rele' id='rele'>");
-							strcat((char*)buf, "  <option value='0'>1</option>");
-							strcat((char*)buf, "  <option value='1'>2</option>");
-							strcat((char*)buf, "</select></center>");
-							strcat((char*)buf, "<center><label for='intertravamento'>Habilitar intertravamento:</label>");
-							strcat((char*)buf, "<select name='intertravamento' id='intertravamento'>");
-							strcat((char*)buf, "  <option value='0'>1</option>");
-							strcat((char*)buf, "  <option value='1'>2</option>");
-							strcat((char*)buf, "</select><br><button>Salvar</button><br>");
-							strcat((char*)buf, "<center><a href='http://192.168.0.231'>Voltar</a><br></center>");
+							strcat((char*)buf, "<center><button>Salvar</button><br><br><a href='http://192.168.0.231'>Voltar</a><br></center>");
 
 							strcat((char*)buf, "</body>");
 							strcat((char*)buf, "</html>");
 						}
-						else if(strncmp("/entradas", url, 6) == 0){
+						else if(strncmp("/interfaces", url, 6) == 0){
 							strcpy((char*)buf,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n");
 							strcat((char*)buf, "<html><head>");
 							strcat((char*)buf, "<title>Escrava Config</title>");
-							strcat((char*)buf, "<link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css' rel='stylesheet'></link>");
 							strcat((char*)buf, "</head>");
 							strcat((char*)buf, "<body>");
 							strcat((char*)buf, "<div class = 'entradas'>");
@@ -731,59 +535,27 @@ int32_t tcp_http_mt(uint8_t sn, uint8_t* buf, uint16_t port)
 							strcat((char*)buf, "</tr>");
 							strcat((char*)buf, "<tr>");
 							strcat((char*)buf, "<td><center>1</center></td>");
-							if(S1 == 1)
-								strcat((char*)buf, "<td><center><a href='/entradas/S1/OFF'>Fechado</a></center></td>");
-							else
-								strcat((char*)buf, "<td><center><a href='/entradas/S1/ON'>Aberto</a></center></td>");
 							strcat((char*)buf, "</tr>");
 							strcat((char*)buf, "<tr>");
 							strcat((char*)buf, "<td><center>2</center></td>");
-							if(S2 == 1)
-								strcat((char*)buf, "<td><center><a href='/entradas/S2/OFF'>Fechado</a></center></td>");
-							else
-								strcat((char*)buf, "<td><center><a href='/entradas/S2/ON'>Aberto</a></center></td>");
 							strcat((char*)buf, "</tr>");
 							strcat((char*)buf, "<tr>");
 							strcat((char*)buf, "<td><center>3</center></td>");
-							if(S3 == 1)
-								strcat((char*)buf, "<td><center><a href='/entradas/S3/OFF'>Fechado</a></center></td>");
-							else
-								strcat((char*)buf, "<td><center><a href='/entradas/S3/ON'>Aberto</a></center></td>");
 							strcat((char*)buf, "</tr>");
 							strcat((char*)buf, "<tr>");
 							strcat((char*)buf, "<td><center>4</center></td>");
-							if(S4 == 1)
-								strcat((char*)buf, "<td><center><a href='/entradas/S4/OFF'>Fechado</a></center></td>");
-							else
-								strcat((char*)buf, "<td><center><a href='/entradas/S4/ON'>Aberto</a></center></td>");
 							strcat((char*)buf, "</tr>");
 							strcat((char*)buf, "<tr>");
 							strcat((char*)buf, "<td><center>5</center></td>");
-							if(S5 == 1)
-								strcat((char*)buf, "<td><center><a href='/entradas/S5/OFF'>Fechado</a></center></td>");
-							else
-								strcat((char*)buf, "<td><center><a href='/entradas/S5/ON'>Aberto</a></center></td>");
 							strcat((char*)buf, "</tr>");
 							strcat((char*)buf, "<tr>");
 							strcat((char*)buf, "<td><center>6</center></td>");
-							if(S6 == 1)
-								strcat((char*)buf, "<td><center><a href='/entradas/S6/OFF'>Fechado</a></center></td>");
-							else
-								strcat((char*)buf, "<td><center><a href='/entradas/S6/ON'>Aberto</a></center></td>");
 							strcat((char*)buf, "</tr>");
 							strcat((char*)buf, "<tr>");
 							strcat((char*)buf, "<td><center>7</center></td>");
-							if(S7 == 1)
-								strcat((char*)buf, "<td><center><a href='/entradas/S7/OFF'>Fechado</a></center></td>");
-							else
-								strcat((char*)buf, "<td><center><a href='/entradas/S7/ON'>Aberto</a></center></td>");
 							strcat((char*)buf, "</tr>");
 							strcat((char*)buf, "<tr>");
 							strcat((char*)buf, "<td><center>8</center></td>");
-							if(S8 == 1)
-								strcat((char*)buf, "<td><center><a href='/entradas/S8/OFF'>Fechado</a></center></td>");
-							else
-								strcat((char*)buf, "<td><center><a href='/entradas/S8/ON'>Aberto</a></center></td>");
 							strcat((char*)buf, "</tr>");
 							strcat((char*)buf, "</table></center>");
 							strcat((char*)buf, "<p></p>");
@@ -805,10 +577,9 @@ int32_t tcp_http_mt(uint8_t sn, uint8_t* buf, uint16_t port)
 							strcat((char*)buf, "<body>");
 							strcat((char*)buf, "<div class = 'entradas'>");
 
-							strcat((char*)buf, "<b><center>Menus para configuracao</b><br>");
-							strcat((char*)buf, "<a href='http://192.168.0.231/rede'>Configurar rede</a><br>");
-							strcat((char*)buf, "<a href='http://192.168.0.231/rele'>Configurar reles\n</a><br>");
-							strcat((char*)buf, "<a href='http://192.168.0.231/entradas'>Configurar entradas</a><br></center>");
+							strcat((char*)buf, "<b><center>Menus para configuracao</b><br><br>");
+							strcat((char*)buf, "<a href='http://192.168.0.231/rede'>Configurar rede</a><br><br>");
+							strcat((char*)buf, "<a href='http://192.168.0.231/interfaces'>Configurar interfaces\n</a><br>");
 
 							strcat((char*)buf, "</div>");
 							strcat((char*)buf, "</body>");
