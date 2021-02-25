@@ -24,7 +24,11 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "socket.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -35,7 +39,13 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 /* USER CODE END PD */
+#define W5500_select() HAL_GPIO_WritePin(GPIO_W5500_CS_GPIO_Port, GPIO_W5500_CS_Pin, GPIO_PIN_RESET);
+#define W5500_release() HAL_GPIO_WritePin(GPIO_W5500_CS_GPIO_Port, GPIO_W5500_CS_Pin, GPIO_PIN_SET);
 
+#define W5500_rx() W5500_rxtx(0xff)
+#define W5500_tx(data) W5500_rxtx(data)
+
+uint8_t W5500_rxtx(uint8_t data);
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 
@@ -46,9 +56,44 @@ I2C_HandleTypeDef hi2c2;
 
 SPI_HandleTypeDef hspi2;
 
-osThreadId defaultTaskHandle;
-/* USER CODE BEGIN PV */
+/* Definitions for ethernetTask */
+osThreadId_t ethernetTaskHandle;
+const osThreadAttr_t ethernetTask_attributes = {
+  .name = "ethernetTask",
+  .priority = (osPriority_t) osPriorityAboveNormal,
+  .stack_size = 128 * 4
+};
+/* USER CODE BEGIN PV */char writeValue[60];
+uint8_t R1 = 0, R2 = 0, R3 = 0, R4 = 0;
+uint8_t S1 = 0;
+uint8_t S2 = 0;
+uint8_t S3 = 0;
+uint8_t S4 = 0;
+uint8_t S5 = 0;
+uint8_t S6 = 0;
+uint8_t S7 = 0;
+uint8_t S8 = 0;
+#define DATA_BUF_SIZE   2048
+uint8_t gDATABUF[DATA_BUF_SIZE];
 
+///////////////////////////////////
+// Default Network Configuration //
+///////////////////////////////////
+wiz_NetInfo gWIZNETINFO = { .mac = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED},
+							.ip = {192, 168, 0, 231},
+							.sn = {255,255,255,0},
+							.gw = {192, 168, 0, 1},
+							.dns = {0,0,0,0},
+							.dhcp = NETINFO_STATIC };
+
+//states for multythread http
+#define HTTP_IDLE 0
+#define HTTP_SENDING 1
+
+//variables for multythread http
+uint32_t sentsize[_WIZCHIP_SOCK_NUM_];
+uint32_t filesize[_WIZCHIP_SOCK_NUM_];
+uint8_t http_state[_WIZCHIP_SOCK_NUM_];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -56,10 +101,16 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_I2C2_Init(void);
-void StartDefaultTask(void const * argument);
+void StartEthernet(void *argument);
 
 /* USER CODE BEGIN PFP */
-
+void  wizchip_select(void);
+void  wizchip_deselect(void);
+void  wizchip_write(uint8_t wb);
+uint8_t wizchip_read();
+void network_init(void);								// Initialize Network information and display it
+int32_t tcp_http_mt(uint8_t, uint8_t*, uint16_t);		// Multythread TCP server
+void HTTP_reset(uint8_t sockn);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -74,7 +125,8 @@ void StartDefaultTask(void const * argument);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+	uint8_t i;
+	uint8_t memsize[2][8] = {{2,2,2,2,2,2,2,2},{2,2,2,2,2,2,2,2}};
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -99,7 +151,35 @@ int main(void)
   MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
 
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+     // First of all, Should register SPI callback functions implemented by user for accessing WIZCHIP //
+     ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+     /* Chip selection call back */
+  	reg_wizchip_cs_cbfunc(wizchip_select, wizchip_deselect);
+
+  	 /* SPI Read & Write callback function */
+  	reg_wizchip_spi_cbfunc(wizchip_read, wizchip_write);
+
+  	////////////////////////////////////////////////////////////////////////
+  	/* WIZCHIP SOCKET Buffer initialize */
+  	if(ctlwizchip(CW_INIT_WIZCHIP,(void*)memsize) == -1)
+  	{
+  	   //init fail
+  	   while(1);
+  	}
+
+  	/* Network initialization */
+  	network_init();
+
+  	//all connections inactive
+  	for(i=0;i<_WIZCHIP_SOCK_NUM_;i++)
+  	HTTP_reset(i);
+
   /* USER CODE END 2 */
+
+  /* Init scheduler */
+  osKernelInitialize();
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
@@ -118,9 +198,8 @@ int main(void)
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
-  defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
+  /* creation of ethernetTask */
+  ethernetTaskHandle = osThreadNew(StartEthernet, NULL, &ethernetTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -259,9 +338,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, OUT1_OP9_Pin|OUT1_OP10_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(ON_LED1_GPIO_Port, ON_LED1_Pin, GPIO_PIN_RESET);
@@ -271,6 +354,13 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(Rst_GPIO_Port, Rst_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pins : OUT1_OP9_Pin OUT1_OP10_Pin */
+  GPIO_InitStruct.Pin = OUT1_OP9_Pin|OUT1_OP10_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : ON_LED1_Pin */
   GPIO_InitStruct.Pin = ON_LED1_Pin;
@@ -315,23 +405,494 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+uint8_t W5500_rxtx(uint8_t data)
+{
+	uint8_t rxdata;
 
+	HAL_SPI_TransmitReceive(&hspi2, &data, &rxdata, 1, 50);
+
+	return (rxdata);
+}
+
+//////////
+// TODO //
+/////////////////////////////////////////////////////////////////
+// SPI Callback function for accessing WIZCHIP                 //
+// WIZCHIP user should implement with your host spi peripheral //
+/////////////////////////////////////////////////////////////////
+void  wizchip_select(void)
+{
+	W5500_select();
+}
+
+void  wizchip_deselect(void)
+{
+	W5500_release();
+}
+
+void  wizchip_write(uint8_t wb)
+{
+	W5500_tx(wb);
+}
+
+uint8_t wizchip_read()
+{
+   return W5500_rx();
+}
+//////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////
+// Intialize the network information to be used in WIZCHIP //
+/////////////////////////////////////////////////////////////
+void network_init(void)
+{
+   uint8_t tmpstr[6];
+
+	ctlnetwork(CN_SET_NETINFO, (void*)&gWIZNETINFO);
+
+	ctlwizchip(CW_GET_ID,(void*)tmpstr);
+}
+/////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////
+// HTTP Multythread Example Code using ioLibrary_BSD         //
+///////////////////////////////////////////////////////////////
+#define len(some) (sizeof(some)/sizeof(some[0]))
+
+//http server
+
+void HTTP_reset(uint8_t sockn)
+{
+    sentsize[sockn]=0;
+	http_state[sockn]=HTTP_IDLE;
+}
+
+int32_t tcp_http_mt(uint8_t sn, uint8_t* buf, uint16_t port)
+{
+   int32_t ret;
+   uint32_t size = 0;
+   uint8_t flagHtmlGen = 0;
+   char *url,*p;
+   uint16_t blocklen=0;
+
+   switch(getSn_SR(sn))
+   {
+      case SOCK_ESTABLISHED :
+
+         if(getSn_IR(sn) & Sn_IR_CON)
+         {
+            setSn_IR(sn,Sn_IR_CON);
+         }
+
+         if((size = getSn_RX_RSR(sn)) > 0)
+         {
+            if(size > DATA_BUF_SIZE) size = DATA_BUF_SIZE;
+            ret = recv(sn,buf,size);
+
+            HTTP_reset(sn);
+
+            if(ret <= 0)
+            return ret;
+
+            url =(char*) buf + 4;
+
+            if((http_state[sn]==HTTP_IDLE)&&(memcmp(buf, "GET ", 4)==0)&&((p = strchr(url, ' '))))// extract URL from request header
+            {
+              *(p++) = 0;//making zeroed url string
+
+				if ((url != NULL)&&(strncmp("/favicon.ico",url,12) != 0))
+				{
+					flagHtmlGen = 1;
+					if (strncmp("/rele/R1/ON",url,6) == 0)
+					{
+						R1 = 1;
+					}
+					else if (strncmp("/rele/R1/OFF",url,12) == 0)
+					{
+						R1 = 0;
+					}
+					else if (strncmp("/rele/R2/ON",url,12) == 0)
+					{
+						R2 = 1;
+					}
+					else if (strncmp("/rele/R2/OFF",url,12) == 0)
+					{
+						R2 = 0;
+					}
+					else if (strncmp("/rele/R3/ON",url,12) == 0)
+					{
+						R3 = 1;
+					}
+					else if (strncmp("/rele/R3/OFF",url,12) == 0)
+					{
+						R3 = 0;
+					}
+					else if (strncmp("/rele/R4/ON",url,12) == 0)
+					{
+						R4 = 1;
+					}
+					else if (strncmp("/rele/R4/OFF",url,12) == 0)
+					{
+						R4 = 0;
+					}
+					else if (strncmp("/entradas/S1/ON",url,16) == 0)
+					{
+						S1 = 1;
+					}
+					else if (strncmp("/entradas/S1/OFF",url,16) == 0)
+					{
+						S1 = 0;
+					}
+					else if (strncmp("/entradas/S2/ON",url,16) == 0)
+					{
+						S2 = 1;
+					}
+					else if (strncmp("/entradas/S2/OFF",url,16) == 0)
+					{
+						S2 = 0;
+					}
+					else if (strncmp("/entradas/S3/ON",url,16) == 0)
+					{
+						S3 = 1;
+					}
+					else if (strncmp("/entradas/S3/OFF",url,16) == 0)
+					{
+						S3 = 0;
+					}
+					else if (strncmp("/entradas/S4/ON",url,16) == 0)
+					{
+						S4 = 1;
+					}
+					else if (strncmp("/entradas/S4/OFF",url,16) == 0)
+					{
+						S4 = 0;
+					}
+					else if (strncmp("/entradas/S5/ON",url,16) == 0)
+					{
+						S5 = 1;
+					}
+					else if (strncmp("/entradas/S5/OFF",url,16) == 0)
+					{
+						S5 = 0;
+					}
+					else if (strncmp("/entradas/S6/ON",url,16) == 0)
+					{
+						S6 = 1;
+					}
+					else if (strncmp("/entradas/S6/OFF",url,16) == 0)
+					{
+						S6 = 0;
+					}
+					else if (strncmp("/entradas/S7/ON",url,16) == 0)
+					{
+						S7 = 1;
+					}
+					else if (strncmp("/entradas/S7/OFF",url,16) == 0)
+					{
+						S7 = 0;
+					}
+					else if (strncmp("/entradas/S8/ON",url,16) == 0)
+					{
+						S8 = 1;
+					}
+					else if (strncmp("/entradas/S8/OFF",url,16) == 0)
+					{
+						S8 = 0;
+					}
+
+					//Gera��o da HTML
+					if(flagHtmlGen == 1)
+					{
+						if(strncmp("/rede", url, 6) == 0)
+						{
+							strcpy((char*)buf,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n");
+							strcat((char*)buf, "<html><head>");
+							strcat((char*)buf, "<title>Escrava Config</title>");
+							strcat((char*)buf, "<link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css' rel='stylesheet'></link>");
+							strcat((char*)buf, "</head>");
+							strcat((char*)buf, "<body>");
+							strcat((char*)buf, "<div class = 'rede'>");
+							strcat((char*)buf, "<title> Config Placa Escrava </title>");
+							strcat((char*)buf, "<b><center>Configuracao da Placa de rede Escrava</b></center>");
+							strcat((char*)buf, "<p></p>");
+							strcat((char*)buf, "<center><form action=''>");
+							strcat((char*)buf, "IP: <input type='text' name='ip'><br>");
+							strcat((char*)buf, "<p></p>");
+							strcat((char*)buf, "Mascara: <input type='text' name='mascara'><br>");
+							strcat((char*)buf, "<p></p>");
+							strcat((char*)buf, "Porta: <input type='text' name='porta'><br>");
+							strcat((char*)buf, "<p></p>");
+							strcat((char*)buf, "Gateway: <input type='text' name='gateway'><br>");
+							strcat((char*)buf, "<p></p>");
+							strcat((char*)buf, "DNS 1: <input type='text' name='dns1'><br>");
+							strcat((char*)buf, "<p></p>");
+							strcat((char*)buf, "<p></p>");
+							strcat((char*)buf, "DNS 2: <input type='text' name='dns2'><br>");
+							strcat((char*)buf, "<p></p>");
+							strcat((char*)buf, "DHCP: <button>On</button>  <button>Off</button>");
+							strcat((char*)buf, "</center></form>");
+							strcat((char*)buf, "<center><button>Salvar</button></center></div>");
+							strcat((char*)buf, "<center>");
+							strcat((char*)buf, "<p></p>");
+							strcat((char*)buf, "<a href='http://192.168.0.231'>Voltar</a><br>");
+							strcat((char*)buf, "</center>");
+							strcat((char*)buf, "</body>");
+							strcat((char*)buf, "</html>");
+						}
+						else if(strncmp("/rele", url, 6) == 0)
+						{
+							strcpy((char*)buf,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n");
+							strcat((char*)buf, "<html><head>");
+							strcat((char*)buf, "<title>Escrava Config</title>");
+							strcat((char*)buf, "<link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css' rel='stylesheet'></link>");
+							strcat((char*)buf, "</head>");
+							strcat((char*)buf, "<body>");
+
+							strcat((char*)buf, "<b><center>Configuracao dos reles</b> </center>");
+							strcat((char*)buf, "<center><table border='1'>");
+							strcat((char*)buf, "<tr><td><b>Rele Numero</b></td>");
+							strcat((char*)buf, "<td><b>Estado do rele</b></td>");
+							strcat((char*)buf, "<td><b><center>Tempo atracado (seg)</center></b></td>");
+							strcat((char*)buf, "<td><b><center>Tipo de Acionamento</center></b></td>");
+							strcat((char*)buf, "<td><b><center>Acionamento</center></b></td></tr>");
+
+							strcat((char*)buf, "<tr><td><center>1</center></td>");
+							strcat((char*)buf, "<td><center>False</center></td>");
+							strcat((char*)buf, "<td><input type='text' name='tempo1'><br></td>");
+							strcat((char*)buf, "<td><center>");
+							strcat((char*)buf, "<select id='Acionamento1'>");
+							strcat((char*)buf, "<option value='0'>Pulso</option>");
+							strcat((char*)buf, "<option value='1'>Retencao</option>");
+							strcat((char*)buf, "</select></center></td>");
+							strcat((char*)buf, "<td><center><a href=''> Aberto </a></tr>");
+
+							strcat((char*)buf, "<tr><td><center>2</center></td>");
+							strcat((char*)buf, "<td><center>False</center></td>");
+							strcat((char*)buf, "<td><input type='text' name='tempo2'><br></td>");
+							strcat((char*)buf, "<td><center>");
+							strcat((char*)buf, "<select id='Acionamento2'>");
+							strcat((char*)buf, "<option value='0'>Pulso</option>");
+							strcat((char*)buf, "<option value='1'>Retencao</option>");
+							strcat((char*)buf, "</select></center></td>");
+							strcat((char*)buf, "<td><center><a href=''> Aberto </a></tr>");
+
+							strcat((char*)buf, "<tr><td><center>3</center></td>");
+							strcat((char*)buf, "<td><center>False</center></td>");
+							strcat((char*)buf, "<td><input type='text' name='tempo3'><br></td>");
+							strcat((char*)buf, "<td><center>");
+							strcat((char*)buf, "<select id='Acionamento3'>");
+							strcat((char*)buf, "<option value='0'>Pulso</option>");
+							strcat((char*)buf, "<option value='1'>Retencao</option>");
+							strcat((char*)buf, "</select></center></td>");
+							strcat((char*)buf, "<td><center><a href=''> Aberto </a></tr>");
+
+							strcat((char*)buf, "<tr><td><center>4</center></td>");
+							strcat((char*)buf, "<td><center>False</center></td>");
+							strcat((char*)buf, "<td><input type='text' name='tempo4'><br></td>");
+							strcat((char*)buf, "<td><center>");
+							strcat((char*)buf, "<select id='Acionamento4'>");
+							strcat((char*)buf, "<option value='0'>Pulso</option>");
+							strcat((char*)buf, "<option value='1'>Retencao</option>");
+							strcat((char*)buf, "</select></center></td>");
+							strcat((char*)buf, "<td><center><a href=''> Aberto </a></tr>");
+
+							strcat((char*)buf, "</table></center>");
+							strcat((char*)buf, "<center><label for='rele'>Rele de intertravamento:</label>");
+							strcat((char*)buf, "<select name='rele' id='rele'>");
+							strcat((char*)buf, "  <option value='0'>1</option>");
+							strcat((char*)buf, "  <option value='1'>2</option>");
+							strcat((char*)buf, "</select></center>");
+							strcat((char*)buf, "<center><label for='intertravamento'>Habilitar intertravamento:</label>");
+							strcat((char*)buf, "<select name='intertravamento' id='intertravamento'>");
+							strcat((char*)buf, "  <option value='0'>1</option>");
+							strcat((char*)buf, "  <option value='1'>2</option>");
+							strcat((char*)buf, "</select><br><button>Salvar</button><br>");
+							strcat((char*)buf, "<center><a href='http://192.168.0.231'>Voltar</a><br></center>");
+
+							strcat((char*)buf, "</body>");
+							strcat((char*)buf, "</html>");
+						}
+						else if(strncmp("/entradas", url, 6) == 0){
+							strcpy((char*)buf,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n");
+							strcat((char*)buf, "<html><head>");
+							strcat((char*)buf, "<title>Escrava Config</title>");
+							strcat((char*)buf, "<link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css' rel='stylesheet'></link>");
+							strcat((char*)buf, "</head>");
+							strcat((char*)buf, "<body>");
+							strcat((char*)buf, "<div class = 'entradas'>");
+
+							strcat((char*)buf, "<b><center>Estado das Entradas</b> </center>");
+							strcat((char*)buf, "<p></p>");
+							strcat((char*)buf, "<center><table border='1'>");
+							strcat((char*)buf, "<tr>");
+							strcat((char*)buf, "<td><b>Entrada Numero</b></td>");
+							strcat((char*)buf, "<td><b>Estado da entrada</b></td>");
+							strcat((char*)buf, "</tr>");
+							strcat((char*)buf, "<tr>");
+							strcat((char*)buf, "<td><center>1</center></td>");
+							if(S1 == 1)
+								strcat((char*)buf, "<td><center><a href='/entradas/S1/OFF'>Fechado</a></center></td>");
+							else
+								strcat((char*)buf, "<td><center><a href='/entradas/S1/ON'>Aberto</a></center></td>");
+							strcat((char*)buf, "</tr>");
+							strcat((char*)buf, "<tr>");
+							strcat((char*)buf, "<td><center>2</center></td>");
+							if(S2 == 1)
+								strcat((char*)buf, "<td><center><a href='/entradas/S2/OFF'>Fechado</a></center></td>");
+							else
+								strcat((char*)buf, "<td><center><a href='/entradas/S2/ON'>Aberto</a></center></td>");
+							strcat((char*)buf, "</tr>");
+							strcat((char*)buf, "<tr>");
+							strcat((char*)buf, "<td><center>3</center></td>");
+							if(S3 == 1)
+								strcat((char*)buf, "<td><center><a href='/entradas/S3/OFF'>Fechado</a></center></td>");
+							else
+								strcat((char*)buf, "<td><center><a href='/entradas/S3/ON'>Aberto</a></center></td>");
+							strcat((char*)buf, "</tr>");
+							strcat((char*)buf, "<tr>");
+							strcat((char*)buf, "<td><center>4</center></td>");
+							if(S4 == 1)
+								strcat((char*)buf, "<td><center><a href='/entradas/S4/OFF'>Fechado</a></center></td>");
+							else
+								strcat((char*)buf, "<td><center><a href='/entradas/S4/ON'>Aberto</a></center></td>");
+							strcat((char*)buf, "</tr>");
+							strcat((char*)buf, "<tr>");
+							strcat((char*)buf, "<td><center>5</center></td>");
+							if(S5 == 1)
+								strcat((char*)buf, "<td><center><a href='/entradas/S5/OFF'>Fechado</a></center></td>");
+							else
+								strcat((char*)buf, "<td><center><a href='/entradas/S5/ON'>Aberto</a></center></td>");
+							strcat((char*)buf, "</tr>");
+							strcat((char*)buf, "<tr>");
+							strcat((char*)buf, "<td><center>6</center></td>");
+							if(S6 == 1)
+								strcat((char*)buf, "<td><center><a href='/entradas/S6/OFF'>Fechado</a></center></td>");
+							else
+								strcat((char*)buf, "<td><center><a href='/entradas/S6/ON'>Aberto</a></center></td>");
+							strcat((char*)buf, "</tr>");
+							strcat((char*)buf, "<tr>");
+							strcat((char*)buf, "<td><center>7</center></td>");
+							if(S7 == 1)
+								strcat((char*)buf, "<td><center><a href='/entradas/S7/OFF'>Fechado</a></center></td>");
+							else
+								strcat((char*)buf, "<td><center><a href='/entradas/S7/ON'>Aberto</a></center></td>");
+							strcat((char*)buf, "</tr>");
+							strcat((char*)buf, "<tr>");
+							strcat((char*)buf, "<td><center>8</center></td>");
+							if(S8 == 1)
+								strcat((char*)buf, "<td><center><a href='/entradas/S8/OFF'>Fechado</a></center></td>");
+							else
+								strcat((char*)buf, "<td><center><a href='/entradas/S8/ON'>Aberto</a></center></td>");
+							strcat((char*)buf, "</tr>");
+							strcat((char*)buf, "</table></center>");
+							strcat((char*)buf, "<p></p>");
+							strcat((char*)buf, "<center>");
+							strcat((char*)buf, "<a href='http://192.168.0.231'>Voltar</a><br>");
+							strcat((char*)buf, "</center>");
+
+							strcat((char*)buf, "</div>");
+							strcat((char*)buf, "</body>");
+							strcat((char*)buf, "</html>");
+						}
+						else
+						{
+							strcpy((char*)buf,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n");
+							strcat((char*)buf, "<html><head>");
+							strcat((char*)buf, "<title>Escrava Config</title>");
+							strcat((char*)buf, "<link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css' rel='stylesheet'></link>");
+							strcat((char*)buf, "</head>");
+							strcat((char*)buf, "<body>");
+							strcat((char*)buf, "<div class = 'entradas'>");
+
+							strcat((char*)buf, "<b><center>Menus para configuracao</b><br>");
+							strcat((char*)buf, "<a href='http://192.168.0.231/rede'>Configurar rede</a><br>");
+							strcat((char*)buf, "<a href='http://192.168.0.231/rele'>Configurar reles\n</a><br>");
+							strcat((char*)buf, "<a href='http://192.168.0.231/entradas'>Configurar entradas</a><br></center>");
+
+							strcat((char*)buf, "</div>");
+							strcat((char*)buf, "</body>");
+							strcat((char*)buf, "</html>");
+						}
+
+						blocklen = strlen((char*)buf);
+
+						ret = send(sn,buf,blocklen);
+						if(ret < 0)
+						{
+							close(sn);
+							return ret;
+						}
+						else
+						{
+							HTTP_reset(sn);
+							disconnect(sn);
+						}
+					}
+				}
+				else
+				{
+					HTTP_reset(sn);
+					disconnect(sn);
+				}
+
+        	  }
+         }
+         break;
+      case SOCK_CLOSE_WAIT :
+
+    	  HTTP_reset(sn);
+
+         if((ret=disconnect(sn)) != SOCK_OK)
+         return ret;
+
+         break;
+      case SOCK_INIT :
+
+    	  HTTP_reset(sn);
+
+         if( (ret = listen(sn)) != SOCK_OK) return ret;
+         break;
+      case SOCK_CLOSED:
+
+    	  HTTP_reset(sn);
+
+         if((ret=socket(sn,Sn_MR_TCP,port,0x00)) != sn)
+         return ret;
+
+         break;
+
+      default:
+    	  HTTP_reset(sn);
+         break;
+   }
+   return 1;
+}
 /* USER CODE END 4 */
 
-/* USER CODE BEGIN Header_StartDefaultTask */
+/* USER CODE BEGIN Header_StartEthernet */
 /**
-  * @brief  Function implementing the defaultTask thread.
+  * @brief  Function implementing the ethernetTask thread.
   * @param  argument: Not used
   * @retval None
   */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void const * argument)
+/* USER CODE END Header_StartEthernet */
+void StartEthernet(void *argument)
 {
   /* USER CODE BEGIN 5 */
+	uint8_t i;
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+	  for(i=4;i<_WIZCHIP_SOCK_NUM_;i++)
+	  {
+	  	tcp_http_mt(i, gDATABUF, 80);
+	  }
+	  //4 sockets para modbus TCP
+	  for(i=0;i<4;i++)
+	  {
+	  	tcp_http_mt(i, gDATABUF, 502);
+	  }
   }
   /* USER CODE END 5 */
 }
