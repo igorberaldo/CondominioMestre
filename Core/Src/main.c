@@ -38,7 +38,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-/* USER CODE END PD */
 #define W5500_select() HAL_GPIO_WritePin(GPIO_W5500_CS_GPIO_Port, GPIO_W5500_CS_Pin, GPIO_PIN_RESET);
 #define W5500_release() HAL_GPIO_WritePin(GPIO_W5500_CS_GPIO_Port, GPIO_W5500_CS_Pin, GPIO_PIN_SET);
 
@@ -46,6 +45,8 @@
 #define W5500_tx(data) W5500_rxtx(data)
 
 uint8_t W5500_rxtx(uint8_t data);
+/* USER CODE END PD */
+
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 
@@ -63,9 +64,39 @@ const osThreadAttr_t ethernetTask_attributes = {
   .priority = (osPriority_t) osPriorityAboveNormal,
   .stack_size = 128 * 4
 };
-/* USER CODE BEGIN PV */char writeValue[60];
+/* Definitions for readInput1Task */
+osThreadId_t readInput1TaskHandle;
+const osThreadAttr_t readInput1Task_attributes = {
+  .name = "readInput1Task",
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 128 * 4
+};
+/* Definitions for readInput2Task */
+osThreadId_t readInput2TaskHandle;
+const osThreadAttr_t readInput2Task_attributes = {
+  .name = "readInput2Task",
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 128 * 4
+};
+/* Definitions for readInput3Task */
+osThreadId_t readInput3TaskHandle;
+const osThreadAttr_t readInput3Task_attributes = {
+  .name = "readInput3Task",
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 128 * 4
+};
+/* Definitions for readInput4Task */
+osThreadId_t readInput4TaskHandle;
+const osThreadAttr_t readInput4Task_attributes = {
+  .name = "readInput4Task",
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 128 * 4
+};
+/* USER CODE BEGIN PV */
 #define DATA_BUF_SIZE   4096
 uint8_t gDATABUF[DATA_BUF_SIZE];
+
+uint8_t inputs[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 ///////////////////////////////////
 // Default Network Configuration //
@@ -93,6 +124,10 @@ static void MX_GPIO_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_I2C2_Init(void);
 void StartEthernet(void *argument);
+void StartReadInput1(void *argument);
+void StartReadInput2(void *argument);
+void StartReadInput3(void *argument);
+void StartReadInput4(void *argument);
 
 /* USER CODE BEGIN PFP */
 void  wizchip_select(void);
@@ -191,6 +226,18 @@ int main(void)
   /* Create the thread(s) */
   /* creation of ethernetTask */
   ethernetTaskHandle = osThreadNew(StartEthernet, NULL, &ethernetTask_attributes);
+
+  /* creation of readInput1Task */
+  readInput1TaskHandle = osThreadNew(StartReadInput1, NULL, &readInput1Task_attributes);
+
+  /* creation of readInput2Task */
+  readInput2TaskHandle = osThreadNew(StartReadInput2, NULL, &readInput2Task_attributes);
+
+  /* creation of readInput3Task */
+  readInput3TaskHandle = osThreadNew(StartReadInput3, NULL, &readInput3Task_attributes);
+
+  /* creation of readInput4Task */
+  readInput4TaskHandle = osThreadNew(StartReadInput4, NULL, &readInput4Task_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -678,6 +725,94 @@ void StartEthernet(void *argument)
 	  }
   }
   /* USER CODE END 5 */
+}
+
+/* USER CODE BEGIN Header_StartReadInput1 */
+/**
+* @brief Function implementing the readInput1Task thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartReadInput1 */
+void StartReadInput1(void *argument)
+{
+  /* USER CODE BEGIN StartReadInput1 */
+  /* Infinite loop */
+  for(;;)
+  {
+	  inputs[0] = HAL_GPIO_ReadPin(OUT1_OP1_GPIO_Port, OUT1_OP1_Pin);
+	  inputs[1] = HAL_GPIO_ReadPin(OUT1_OP2_GPIO_Port, OUT1_OP2_Pin);
+	  inputs[2] = HAL_GPIO_ReadPin(OUT1_OP3_GPIO_Port, OUT1_OP3_Pin);
+	  inputs[3] = HAL_GPIO_ReadPin(OUT1_OP4_GPIO_Port, OUT1_OP4_Pin);
+    osDelay(1);
+  }
+  /* USER CODE END StartReadInput1 */
+}
+
+/* USER CODE BEGIN Header_StartReadInput2 */
+/**
+* @brief Function implementing the readInput2Task thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartReadInput2 */
+void StartReadInput2(void *argument)
+{
+  /* USER CODE BEGIN StartReadInput2 */
+  /* Infinite loop */
+  for(;;)
+  {
+	  inputs[4] = HAL_GPIO_ReadPin(OUT1_OP5_GPIO_Port, OUT1_OP5_Pin);
+	  inputs[5] = HAL_GPIO_ReadPin(OUT1_OP6_GPIO_Port, OUT1_OP6_Pin);
+	  inputs[6] = HAL_GPIO_ReadPin(OUT1_OP7_GPIO_Port, OUT1_OP7_Pin);
+	  inputs[7] = HAL_GPIO_ReadPin(OUT1_OP8_GPIO_Port, OUT1_OP8_Pin);
+    osDelay(1);
+  }
+  /* USER CODE END StartReadInput2 */
+}
+
+/* USER CODE BEGIN Header_StartReadInput3 */
+/**
+* @brief Function implementing the readInput3Task thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartReadInput3 */
+void StartReadInput3(void *argument)
+{
+  /* USER CODE BEGIN StartReadInput3 */
+  /* Infinite loop */
+  for(;;)
+  {
+	  inputs[8] = HAL_GPIO_ReadPin(OUT1_OP8_GPIO_Port, OUT1_OP9_Pin);
+	  inputs[9] = HAL_GPIO_ReadPin(OUT1_OP9_GPIO_Port, OUT1_OP10_Pin);
+	  inputs[10] = HAL_GPIO_ReadPin(OUT1_OP10_GPIO_Port, OUT1_OP11_Pin);
+	  inputs[11] = HAL_GPIO_ReadPin(OUT1_OP11_GPIO_Port, OUT1_OP12_Pin);
+    osDelay(1);
+  }
+  /* USER CODE END StartReadInput3 */
+}
+
+/* USER CODE BEGIN Header_StartReadInput4 */
+/**
+* @brief Function implementing the readInput4Task thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartReadInput4 */
+void StartReadInput4(void *argument)
+{
+  /* USER CODE BEGIN StartReadInput4 */
+  /* Infinite loop */
+  for(;;)
+  {
+	  inputs[12] = HAL_GPIO_ReadPin(OUT1_OP13_GPIO_Port, OUT1_OP13_Pin);
+	  inputs[13] = HAL_GPIO_ReadPin(OUT1_OP14_GPIO_Port, OUT1_OP14_Pin);
+	  inputs[14] = HAL_GPIO_ReadPin(OUT1_OP15_GPIO_Port, OUT1_OP15_Pin);
+	  inputs[15] = HAL_GPIO_ReadPin(OUT1_OP16_GPIO_Port, OUT1_OP16_Pin);
+    osDelay(1);
+  }
+  /* USER CODE END StartReadInput4 */
 }
 
  /**
