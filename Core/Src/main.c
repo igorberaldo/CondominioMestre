@@ -518,52 +518,64 @@ int32_t tcp_http_mt(uint8_t sn, uint8_t* buf, uint16_t port)
 							strcat((char*)buf, "</body>");
 							strcat((char*)buf, "</html>");
 						}
-						else if(strncmp("/interfaces", url, 6) == 0){
+						else if(strncmp("/interfaces", url, 6) == 0)
+						{
 							strcpy((char*)buf,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n");
-							strcat((char*)buf, "<html><head>");
-							strcat((char*)buf, "<title>Escrava Config</title>");
-							strcat((char*)buf, "</head>");
-							strcat((char*)buf, "<body>");
-							strcat((char*)buf, "<div class = 'entradas'>");
+							strcat((char*)buf, "<html><head><title>Escrava Config</title>");
+							strcat((char*)buf, "<center><table border='1'><tr>");
+							strcat((char*)buf, "<td><b>Entrada / IP da placa destino</b></td>");
+							strcat((char*)buf, "<td><b>Rele da placa destino</b></td></tr>");
 
-							strcat((char*)buf, "<b><center>Estado das Entradas</b> </center>");
-							strcat((char*)buf, "<p></p>");
-							strcat((char*)buf, "<center><table border='1'>");
-							strcat((char*)buf, "<tr>");
-							strcat((char*)buf, "<td><b>Entrada Numero</b></td>");
-							strcat((char*)buf, "<td><b>Estado da entrada</b></td>");
-							strcat((char*)buf, "</tr>");
-							strcat((char*)buf, "<tr>");
-							strcat((char*)buf, "<td><center>1</center></td>");
-							strcat((char*)buf, "</tr>");
-							strcat((char*)buf, "<tr>");
-							strcat((char*)buf, "<td><center>2</center></td>");
-							strcat((char*)buf, "</tr>");
-							strcat((char*)buf, "<tr>");
-							strcat((char*)buf, "<td><center>3</center></td>");
-							strcat((char*)buf, "</tr>");
-							strcat((char*)buf, "<tr>");
-							strcat((char*)buf, "<td><center>4</center></td>");
-							strcat((char*)buf, "</tr>");
-							strcat((char*)buf, "<tr>");
-							strcat((char*)buf, "<td><center>5</center></td>");
-							strcat((char*)buf, "</tr>");
-							strcat((char*)buf, "<tr>");
-							strcat((char*)buf, "<td><center>6</center></td>");
-							strcat((char*)buf, "</tr>");
-							strcat((char*)buf, "<tr>");
-							strcat((char*)buf, "<td><center>7</center></td>");
-							strcat((char*)buf, "</tr>");
-							strcat((char*)buf, "<tr>");
-							strcat((char*)buf, "<td><center>8</center></td>");
-							strcat((char*)buf, "</tr>");
-							strcat((char*)buf, "</table></center>");
-							strcat((char*)buf, "<p></p>");
-							strcat((char*)buf, "<center>");
-							strcat((char*)buf, "<a href='http://192.168.0.231'>Voltar</a><br>");
-							strcat((char*)buf, "</center>");
+							strcat((char*)buf, "<tr><td>1:  <input type='text' name='ipDestino1'></td>");
+							strcat((char*)buf, "<td><input type='text' name='releDestino1'></td></tr>");
 
-							strcat((char*)buf, "</div>");
+							strcat((char*)buf, "<tr><td>2:  <input type='text' name='ipDestino2'></td>");
+							strcat((char*)buf, "<td><input type='text' name='releDestino2'></td></tr>");
+
+							strcat((char*)buf, "<tr><td>3:  <input type='text' name='ipDestino3'></td>");
+							strcat((char*)buf, "<td><input type='text' name='releDestino3'></td></tr>");
+
+							strcat((char*)buf, "<tr><td>4:  <input type='text' name='ipDestino4'></td>");
+							strcat((char*)buf, "<td><input type='text' name='releDestino4'></td></tr>");
+
+							strcat((char*)buf, "<tr><td>5:  <input type='text' name='ipDestino5'></td>");
+							strcat((char*)buf, "<td><input type='text' name='releDestino5'></td></tr>");
+
+							strcat((char*)buf, "<tr><td>6:  <input type='text' name='ipDestino6'></td>");
+							strcat((char*)buf, "<td><input type='text' name='releDestino6'></td></tr>");
+
+							strcat((char*)buf, "<tr><td>7:  <input type='text' name='ipDestino7'></td>");
+							strcat((char*)buf, "<td><input type='text' name='releDestino7'></td></tr>");
+
+							strcat((char*)buf, "<tr><td>8:  <input type='text' name='ipDestino8'></td>");
+							strcat((char*)buf, "<td><input type='text' name='releDestino8'></td></tr>");
+
+							strcat((char*)buf, "<tr><td>9:  <input type='text' name='ipDestino9'></td>");
+							strcat((char*)buf, "<td><input type='text' name='releDestino9'></td></tr>");
+
+							strcat((char*)buf, "<tr><td>10: <input type='text' name='ipDestino10'></td>");
+							strcat((char*)buf, "<td><input type='text' name='releDestino10'></td></tr>");
+
+							strcat((char*)buf, "<tr><td>11: <input type='text' name='ipDestino11'></td>");
+							strcat((char*)buf, "<td><input type='text' name='releDestino11'></td></tr>");
+
+							strcat((char*)buf, "<tr><td>12: <input type='text' name='ipDestino12'></td>");
+							strcat((char*)buf, "<td><input type='text' name='releDestino12'></td></tr>");
+
+							strcat((char*)buf, "<tr><td>13: <input type='text' name='ipDestino13'></td>");
+							strcat((char*)buf, "<td><input type='text' name='releDestino13'></td></tr>");
+
+							strcat((char*)buf, "<tr><td>14: <input type='text' name='ipDestino14'></td>");
+							strcat((char*)buf, "<td><input type='text' name='releDestino14'></td></tr>");
+
+							strcat((char*)buf, "<tr><td>15: <input type='text' name='ipDestino15'></td>");
+							strcat((char*)buf, "<td><input type='text' name='releDestino15'></td></tr>");
+
+							strcat((char*)buf, "<tr><td>16: <input type='text' name='ipDestino16'></td>");
+							strcat((char*)buf, "<td><input type='text' name='releDestino16'></td></tr>");
+
+							strcat((char*)buf, "</table><br><button>Salvar</button><br><br><a href='http://192.168.0.231'>Voltar</a><br></center>");
+
 							strcat((char*)buf, "</body>");
 							strcat((char*)buf, "</html>");
 						}
