@@ -44,7 +44,7 @@
 #define W5500_rx() W5500_rxtx(0xff)
 #define W5500_tx(data) W5500_rxtx(data)
 
-#define FLASH_STORAGE 0x08005000
+#define FLASH_STORAGE 0x08007000
 #define page_size 0x800
 /* USER CODE END PD */
 
@@ -205,6 +205,18 @@ int main(void)
   	//all connections inactive
   	for(i=0;i<_WIZCHIP_SOCK_NUM_;i++)
   	HTTP_reset(i);
+
+  	char write_data[50];
+  	memset(write_data, 0, sizeof(write_data));
+  	strcpy(write_data, "Hello World!!!");
+
+  	save_to_flash((uint8_t*)write_data);
+
+  	char read_data[50];
+  	  memset(read_data, 0, sizeof(read_data));
+
+  	  read_flash((uint8_t*)read_data);
+
 
   /* USER CODE END 2 */
 
@@ -635,7 +647,6 @@ int32_t tcp_http_mt(uint8_t sn, uint8_t* buf, uint16_t port)
 							strcpy((char*)buf,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n");
 							strcat((char*)buf, "<html><head>");
 							strcat((char*)buf, "<title>Escrava Config</title>");
-							strcat((char*)buf, "<link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css' rel='stylesheet'></link>");
 							strcat((char*)buf, "</head>");
 							strcat((char*)buf, "<body>");
 							strcat((char*)buf, "<div class = 'entradas'>");
@@ -729,7 +740,7 @@ void save_to_flash(uint8_t *data)
 	  volatile uint32_t write_cnt=0, index=0;
 
 	  volatile HAL_StatusTypeDef status;
-	  status = HAL_FLASHEx_Erase(&EraseInitStruct, &PageError);
+	  //status = HAL_FLASHEx_Erase(&EraseInitStruct, &PageError);
 	  while(index < data_length)
 	  {
 		  if (status == HAL_OK)
