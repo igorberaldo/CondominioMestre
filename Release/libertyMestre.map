@@ -74,6 +74,10 @@ Discarded input sections
  .bss           0x0000000000000000        0x0 Core/Src/main.o
  .text.HTTP_reset
                 0x0000000000000000       0x18 Core/Src/main.o
+ .text.save_to_flash
+                0x0000000000000000       0xe0 Core/Src/main.o
+ .text.read_flash
+                0x0000000000000000       0x4e Core/Src/main.o
  .text.Error_Handler
                 0x0000000000000000        0x2 Core/Src/main.o
  .text          0x0000000000000000        0x0 Core/Src/stm32f1xx_hal_msp.o
