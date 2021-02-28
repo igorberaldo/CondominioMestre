@@ -210,12 +210,12 @@ int main(void)
   	memset(write_data, 0, sizeof(write_data));
   	strcpy(write_data, "Hello World!!!");
 
-  	save_to_flash((uint8_t*)write_data);
+  	/*save_to_flash((uint8_t*)write_data);
 
   	char read_data[50];
   	  memset(read_data, 0, sizeof(read_data));
 
-  	  read_flash((uint8_t*)read_data);
+  	  read_flash((uint8_t*)read_data);*/
 
 
   /* USER CODE END 2 */
@@ -562,7 +562,7 @@ int32_t tcp_http_mt(uint8_t sn, uint8_t* buf, uint16_t port)
 					//Gera��o da HTML
 					if(flagHtmlGen == 1)
 					{
-						if(strncmp("/rede", url, 6) == 0)
+						if(strncmp("/rede", url, 4) == 0)
 						{
 							strcpy((char*)buf,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n");
 							strcat((char*)buf, "<html><head>");
@@ -571,12 +571,18 @@ int32_t tcp_http_mt(uint8_t sn, uint8_t* buf, uint16_t port)
 							strcat((char*)buf, "<body>");
 							strcat((char*)buf, "<b><center>Configuracao da Placa de rede</b></center><br>");
 							strcat((char*)buf, "<center><form action=''>");
-							strcat((char*)buf, "IP: <input type='text' name='ip'>		Mascara: <input type='text' name='mascara'><br><br>");
-							strcat((char*)buf, "Porta: <input type='text' name='porta'>		Gateway: <input type='text' name='gateway'><br><br>");
-							strcat((char*)buf, "DNS 1: <input type='text' name='dns1'>		DNS 2: <input type='text' name='dns2'><br><br>");
+							strcat((char*)buf, "IP: <input type='text' id='ip'>		Mascara: <input type='text' id='mascara'><br><br>");
+							strcat((char*)buf, "Porta: <input type='text' id='porta'>		Gateway: <input type='text' id='gateway'><br><br>");
+							strcat((char*)buf, "DNS 1: <input type='text' id='dns1'>		DNS 2: <input type='text' id='dns2'><br><br>");
 							strcat((char*)buf, "DHCP: <button>On</button>  <button>Off</button>");
 							strcat((char*)buf, "</center></form>");
-							strcat((char*)buf, "<center><button>Salvar</button><br><br><a href='http://192.168.0.231'>Voltar</a><br></center>");
+
+							strcat((char*)buf, "<script>function configNet() {");
+							strcat((char*)buf, "window.open('http://192.168.0.231/rede/config/ip:' + document.getElementById('ip').value + 'mask:' + document.getElementById('mascara').value + 'port:' +");
+							strcat((char*)buf, "document.getElementById('porta').value + 'gateway:' + document.getElementById('gateway').value + 'dns1:' + document.getElementById('dns1').value +");
+							strcat((char*)buf, "'dns2:' + document.getElementById('dns2').value, '_self');}</script>");
+
+							strcat((char*)buf, "<center><button onClick = 'configNet()'>Salvar</button><br><br><a href='http://192.168.0.231'>Voltar</a><br></center>");
 
 							strcat((char*)buf, "</body>");
 							strcat((char*)buf, "</html>");
