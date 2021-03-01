@@ -96,6 +96,7 @@ const osThreadAttr_t readInput4Task_attributes = {
 /* USER CODE BEGIN PV */
 #define DATA_BUF_SIZE   4096
 uint8_t gDATABUF[DATA_BUF_SIZE];
+char config_data[300];
 
 uint8_t inputs[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
@@ -559,6 +560,15 @@ int32_t tcp_http_mt(uint8_t sn, uint8_t* buf, uint16_t port)
 				if ((url != NULL)&&(strncmp("/favicon.ico",url,12) != 0))
 				{
 					flagHtmlGen = 1;
+					if (strncmp("/ip",url,2) == 0)
+					{
+						memset(config_data, 0, sizeof(config_data));
+						char *aux, rm[14];
+						strcpy(rm, "/rede/config/");
+						aux = strremove(url, rm);
+						strcpy(config_data, aux);
+						HAL_GPIO_TogglePin(OUT1_OP9_GPIO_Port, OUT1_OP9_Pin);
+					}
 
 					//Gera��o da HTML
 					if(flagHtmlGen == 1)
@@ -579,9 +589,9 @@ int32_t tcp_http_mt(uint8_t sn, uint8_t* buf, uint16_t port)
 							strcat((char*)buf, "</center></form>");
 
 							strcat((char*)buf, "<script>function configNet() {");
-							strcat((char*)buf, "window.open('http://192.168.0.231/rede/config/ip:' + document.getElementById('ip').value + 'mask:' + document.getElementById('mascara').value + 'port:' +");
-							strcat((char*)buf, "document.getElementById('porta').value + 'gateway:' + document.getElementById('gateway').value + 'dns1:' + document.getElementById('dns1').value +");
-							strcat((char*)buf, "'dns2:' + document.getElementById('dns2').value, '_self');}</script>");
+							strcat((char*)buf, "window.open('http://192.168.0.231/ip:' + document.getElementById('ip').value + ',mask:' + document.getElementById('mascara').value + ',port:' +");
+							strcat((char*)buf, "document.getElementById('porta').value + ',gateway:' + document.getElementById('gateway').value + ',dns1:' + document.getElementById('dns1').value +");
+							strcat((char*)buf, "',dns2:' + document.getElementById('dns2').value, '_self');}</script>");
 
 							strcat((char*)buf, "<center><button onClick = 'configNet()'>Salvar</button><br><br><a href='http://192.168.0.231'>Voltar</a><br></center>");
 
