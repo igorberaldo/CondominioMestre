@@ -141,6 +141,7 @@ int32_t tcp_http_mt(uint8_t, uint8_t*, uint16_t);		// Multythread TCP server
 void HTTP_reset(uint8_t sockn);
 void read_flash(uint8_t* data);		//Reads data from the flash memory
 void save_to_flash(uint8_t* data);		//Writes data to the flash memory
+char *strremove(char *str, const char *sub);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -780,6 +781,19 @@ void read_flash(uint8_t* data)
 			read_cnt += 4;
 		}
 	}while(read_data != 0xFFFFFFFF);
+}
+
+char *strremove(char *str, const char *sub) {
+    char *p, *q, *r;
+    if ((q = r = strstr(str, sub)) != NULL) {
+        size_t len = strlen(sub);
+        while ((r = strstr(p = r + len, sub)) != NULL) {
+            memmove(q, p, r - p);
+            q += r - p;
+        }
+        memmove(q, p, strlen(p) + 1);
+    }
+    return str;
 }
 /* USER CODE END 4 */
 
