@@ -44,7 +44,7 @@
 #define W5500_rx() W5500_rxtx(0xff)
 #define W5500_tx(data) W5500_rxtx(data)
 
-#define FLASH_STORAGE 0x08007000
+#define FLASH_STORAGE 0x0800A000
 #define page_size 0x800
 /* USER CODE END PD */
 
@@ -98,7 +98,7 @@ const osThreadAttr_t readInput4Task_attributes = {
 uint8_t gDATABUF[DATA_BUF_SIZE];
 char config_data[300];
 
-uint8_t inputs[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+	uint8_t inputs[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 ///////////////////////////////////
 // Default Network Configuration //
@@ -159,6 +159,31 @@ int main(void)
   /* USER CODE BEGIN 1 */
 	uint8_t i;
 	uint8_t memsize[2][8] = {{2,2,2,2,2,2,2,2},{2,2,2,2,2,2,2,2}};
+
+	read_flash(config_data);
+
+	if(config_data[0] == '/' && config_data[1] == 'i' && config_data[2] == 'p')
+	{
+		strremove(config_data, "/ip:");
+		gWIZNETINFO.ip[0] = 192;
+		gWIZNETINFO.ip[1] = 168;
+		gWIZNETINFO.ip[2] = 0;
+		gWIZNETINFO.ip[3] = 33;
+		/*gWIZNETINFO.sn[0] = 0;
+		gWIZNETINFO.sn[1] = 0;
+		gWIZNETINFO.sn[2] = 0;
+		gWIZNETINFO.sn[3] = 0;
+		gWIZNETINFO.gw[0] = 192;
+		gWIZNETINFO.gw[1] = 192;
+		gWIZNETINFO.gw[2] = 192;
+		gWIZNETINFO.gw[3] = 192;
+		gWIZNETINFO.dns[0] = 0;
+		gWIZNETINFO.dns[1] = 0;
+		gWIZNETINFO.dns[2] = 0;
+		gWIZNETINFO.dns[3] = 0;*/
+
+		//gWIZNETINFO.dhcp = NETINFO_STATIC };
+	}
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -560,14 +585,14 @@ int32_t tcp_http_mt(uint8_t sn, uint8_t* buf, uint16_t port)
 				if ((url != NULL)&&(strncmp("/favicon.ico",url,12) != 0))
 				{
 					flagHtmlGen = 1;
-					if (strncmp("/ip",url,2) == 0)
+					if (strncmp("/ip:",url,4) == 0)
 					{
 						memset(config_data, 0, sizeof(config_data));
-						char *aux, rm[14];
-						strcpy(rm, "/rede/config/");
-						aux = strremove(url, rm);
-						strcpy(config_data, aux);
-						HAL_GPIO_TogglePin(OUT1_OP9_GPIO_Port, OUT1_OP9_Pin);
+						//char *aux, rm[14];
+						//strcpy(rm, "/rede/config/");
+						//aux = strremove(url, rm);
+						strcpy(config_data, url);
+						save_to_flash(config_data);
 					}
 
 					//Gera��o da HTML
@@ -757,7 +782,7 @@ void save_to_flash(uint8_t *data)
 	  volatile uint32_t write_cnt=0, index=0;
 
 	  volatile HAL_StatusTypeDef status;
-	  //status = HAL_FLASHEx_Erase(&EraseInitStruct, &PageError);
+	  status = HAL_FLASHEx_Erase(&EraseInitStruct, &PageError);
 	  while(index < data_length)
 	  {
 		  if (status == HAL_OK)
