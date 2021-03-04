@@ -143,6 +143,7 @@ void HTTP_reset(uint8_t sockn);
 void read_flash(uint8_t* data);		//Reads data from the flash memory
 void save_to_flash(uint8_t* data);		//Writes data to the flash memory
 char *strremove(char *str, const char *sub);
+void configNetwork();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -157,33 +158,6 @@ char *strremove(char *str, const char *sub);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	uint8_t i;
-	uint8_t memsize[2][8] = {{2,2,2,2,2,2,2,2},{2,2,2,2,2,2,2,2}};
-
-	read_flash(config_data);
-
-	if(config_data[0] == '/' && config_data[1] == 'i' && config_data[2] == 'p')
-	{
-		strremove(config_data, "/ip:");
-		gWIZNETINFO.ip[0] = 192;
-		gWIZNETINFO.ip[1] = 168;
-		gWIZNETINFO.ip[2] = 0;
-		gWIZNETINFO.ip[3] = 33;
-		/*gWIZNETINFO.sn[0] = 0;
-		gWIZNETINFO.sn[1] = 0;
-		gWIZNETINFO.sn[2] = 0;
-		gWIZNETINFO.sn[3] = 0;
-		gWIZNETINFO.gw[0] = 192;
-		gWIZNETINFO.gw[1] = 192;
-		gWIZNETINFO.gw[2] = 192;
-		gWIZNETINFO.gw[3] = 192;
-		gWIZNETINFO.dns[0] = 0;
-		gWIZNETINFO.dns[1] = 0;
-		gWIZNETINFO.dns[2] = 0;
-		gWIZNETINFO.dns[3] = 0;*/
-
-		//gWIZNETINFO.dhcp = NETINFO_STATIC };
-	}
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -207,44 +181,7 @@ int main(void)
   MX_SPI2_Init();
   MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
-
-  ////////////////////////////////////////////////////////////////////////////////////////////////////
-     // First of all, Should register SPI callback functions implemented by user for accessing WIZCHIP //
-     ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-     /* Chip selection call back */
-  	reg_wizchip_cs_cbfunc(wizchip_select, wizchip_deselect);
-
-  	 /* SPI Read & Write callback function */
-  	reg_wizchip_spi_cbfunc(wizchip_read, wizchip_write);
-
-  	////////////////////////////////////////////////////////////////////////
-  	/* WIZCHIP SOCKET Buffer initialize */
-  	if(ctlwizchip(CW_INIT_WIZCHIP,(void*)memsize) == -1)
-  	{
-  	   //init fail
-  	   while(1);
-  	}
-
-  	/* Network initialization */
-  	network_init();
-
-  	//all connections inactive
-  	for(i=0;i<_WIZCHIP_SOCK_NUM_;i++)
-  	HTTP_reset(i);
-
-  	char write_data[50];
-  	memset(write_data, 0, sizeof(write_data));
-  	strcpy(write_data, "Hello World!!!");
-
-  	/*save_to_flash((uint8_t*)write_data);
-
-  	char read_data[50];
-  	  memset(read_data, 0, sizeof(read_data));
-
-  	  read_flash((uint8_t*)read_data);*/
-
-
+  configNetwork();
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -588,11 +525,9 @@ int32_t tcp_http_mt(uint8_t sn, uint8_t* buf, uint16_t port)
 					if (strncmp("/ip:",url,4) == 0)
 					{
 						memset(config_data, 0, sizeof(config_data));
-						//char *aux, rm[14];
-						//strcpy(rm, "/rede/config/");
-						//aux = strremove(url, rm);
 						strcpy(config_data, url);
 						save_to_flash(config_data);
+						configNetwork();
 					}
 
 					//Gera��o da HTML
@@ -829,6 +764,154 @@ char *strremove(char *str, const char *sub) {
         memmove(q, p, strlen(p) + 1);
     }
     return str;
+}
+
+void configNetwork()
+{
+	uint8_t i;
+	uint8_t memsize[2][8] = {{2,2,2,2,2,2,2,2},{2,2,2,2,2,2,2,2}};
+	read_flash(config_data);
+	if(config_data[0] == '/' && config_data[1] == 'i' && config_data[2] == 'p')
+	{
+		strremove(config_data, "/ip:");
+		strremove(config_data, "mask:");
+		strremove(config_data, "port:");
+		strremove(config_data, "gateway:");
+		strremove(config_data, "dns1:");
+		strremove(config_data, "dns2:");
+
+		char *p, *ipPointer, *maskPointer, *portPointer, *gatewayPointer, *dns1Pointer, *dns2Pointer;
+		p = strtok(config_data, ",");
+
+		for(int i = 0; p != NULL; i++)
+		{
+			switch(i)
+			{
+			case 0:
+				ipPointer = p;
+				break;
+			case 1:
+				maskPointer = p;
+				break;
+			case 2:
+				portPointer = p;
+				break;
+			case 3:
+				gatewayPointer = p;
+				break;
+			case 4:
+				dns1Pointer = p;
+				break;
+			case 5:
+				dns2Pointer = p;
+				break;
+			default:
+				break;
+			}
+			p = strtok(NULL, ",");
+		}
+
+		char *ip[4], *mask[4], *gateway[4], *dns1[4], *dns2[4];
+		p = strtok(ipPointer, ".");
+
+		for(int i = 0; p != NULL; i++)
+		{
+			ip[i] = p;
+			p = strtok(NULL, ".");
+		}
+
+		p = strtok(ipPointer, ".");
+
+		for(int i = 0; p != NULL; i++)
+		{
+			ip[i] = p;
+			p = strtok(NULL, ".");
+		}
+
+		p = strtok(ipPointer, ".");
+
+		for(int i = 0; p != NULL; i++)
+		{
+			ip[i] = p;
+			p = strtok(NULL, ".");
+		}
+
+		p = strtok(maskPointer, ".");
+
+		for(int i = 0; p != NULL; i++)
+		{
+			mask[i] = p;
+			p = strtok(NULL, ".");
+		}
+
+		p = strtok(gatewayPointer, ".");
+
+		for(int i = 0; p != NULL; i++)
+		{
+			gateway[i] = p;
+			p = strtok(NULL, ".");
+		}
+
+		p = strtok(dns1Pointer, ".");
+
+		for(int i = 0; p != NULL; i++)
+		{
+			dns1[i] = p;
+			p = strtok(NULL, ".");
+		}
+
+		p = strtok(dns2Pointer, ".");
+
+		for(int i = 0; p != NULL; i++)
+		{
+			dns2[i] = p;
+			p = strtok(NULL, ".");
+		}
+
+	  	gWIZNETINFO.ip[0] = 192;
+	  	gWIZNETINFO.ip[1] = 168;
+	  	gWIZNETINFO.ip[2] = 0;
+	  	gWIZNETINFO.ip[3] = 231;
+	  	/*gWIZNETINFO.gw[0] = gateway[0];
+	  	gWIZNETINFO.gw[1] = gateway[1];
+	  	gWIZNETINFO.gw[2] = gateway[2];
+	  	gWIZNETINFO.gw[3] = gateway[3];
+	  	gWIZNETINFO.dns[0] = dns1[0];
+	  	gWIZNETINFO.dns[1] = dns1[1];
+	  	gWIZNETINFO.dns[2] = dns1[2];
+	  	gWIZNETINFO.dns[3] = dns1[3];
+	  	gWIZNETINFO.sn[0] = mask[0];
+	  	gWIZNETINFO.sn[1] = mask[1];
+	  	gWIZNETINFO.sn[2] = mask[2];
+	  	gWIZNETINFO.sn[3] = mask[3];*/
+	  	gWIZNETINFO.mac[0] =  gWIZNETINFO.mac[0] + 0x01;
+
+	  	HAL_GPIO_WritePin(Rst_GPIO_Port, Rst_Pin, GPIO_PIN_RESET);
+	  	HAL_Delay(500);
+	  	HAL_GPIO_WritePin(Rst_GPIO_Port, Rst_Pin, GPIO_PIN_SET);
+	  	HAL_Delay(50);
+	}
+
+	/* Chip selection call back */
+	reg_wizchip_cs_cbfunc(wizchip_select, wizchip_deselect);
+
+	/* SPI Read & Write callback function */
+	reg_wizchip_spi_cbfunc(wizchip_read, wizchip_write);
+
+	///////////////////////////////////////////////////////////////////////
+	/* WIZCHIP SOCKET Buffer initialize */
+	if(ctlwizchip(CW_INIT_WIZCHIP,(void*)memsize) == -1)
+	{
+		//init fail
+		while(1);
+	}
+
+	/* Network initialization */
+ 	network_init();
+
+	//all connections inactive
+	for(i=0;i<_WIZCHIP_SOCK_NUM_;i++)
+		HTTP_reset(i);
 }
 /* USER CODE END 4 */
 
