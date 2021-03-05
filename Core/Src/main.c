@@ -96,9 +96,10 @@ const osThreadAttr_t readInput4Task_attributes = {
 /* USER CODE BEGIN PV */
 #define DATA_BUF_SIZE   4096
 uint8_t gDATABUF[DATA_BUF_SIZE];
-char config_data[300];
+uint8_t config_data[300];
 
-	uint8_t inputs[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+uint8_t inputs[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+uint8_t ip[4], mask[4], gateway[4], dns1[4], dns2[4], port = 80;
 
 ///////////////////////////////////
 // Default Network Configuration //
@@ -142,7 +143,7 @@ int32_t tcp_http_mt(uint8_t, uint8_t*, uint16_t);		// Multythread TCP server
 void HTTP_reset(uint8_t sockn);
 void read_flash(uint8_t* data);		//Reads data from the flash memory
 void save_to_flash(uint8_t* data);		//Writes data to the flash memory
-char *strremove(char *str, const char *sub);
+uint8_t *strremove(uint8_t *str, const uint8_t *sub);
 void configNetwork();
 /* USER CODE END PFP */
 
@@ -753,8 +754,8 @@ void read_flash(uint8_t* data)
 	}while(read_data != 0xFFFFFFFF);
 }
 
-char *strremove(char *str, const char *sub) {
-    char *p, *q, *r;
+uint8_t *strremove(uint8_t *str, const uint8_t *sub) {
+    uint8_t *p, *q, *r;
     if ((q = r = strstr(str, sub)) != NULL) {
         size_t len = strlen(sub);
         while ((r = strstr(p = r + len, sub)) != NULL) {
@@ -779,60 +780,42 @@ void configNetwork()
 		strremove(config_data, "gateway:");
 		strremove(config_data, "dns1:");
 		strremove(config_data, "dns2:");
-
-		char *p, *ipPointer, *maskPointer, *portPointer, *gatewayPointer, *dns1Pointer, *dns2Pointer;
+		uint8_t *p, *ipPointer, *maskPointer, *portPointer, *gatewayPointer, *dns1Pointer, *dns2Pointer;
 		p = strtok(config_data, ",");
 
 		for(int i = 0; p != NULL; i++)
 		{
 			switch(i)
 			{
-			case 0:
-				ipPointer = p;
-				break;
-			case 1:
-				maskPointer = p;
-				break;
-			case 2:
-				portPointer = p;
-				break;
-			case 3:
-				gatewayPointer = p;
-				break;
-			case 4:
-				dns1Pointer = p;
-				break;
-			case 5:
-				dns2Pointer = p;
-				break;
-			default:
-				break;
+				case 0:
+					ipPointer = p;
+					break;
+				case 1:
+					maskPointer = p;
+					break;
+				case 2:
+					portPointer = p;
+					break;
+				case 3:
+					gatewayPointer = p;
+					break;
+				case 4:
+					dns1Pointer = p;
+					break;
+				case 5:
+					dns2Pointer = p;
+					break;
+				default:
+					break;
 			}
 			p = strtok(NULL, ",");
 		}
 
-		char *ip[4], *mask[4], *gateway[4], *dns1[4], *dns2[4];
 		p = strtok(ipPointer, ".");
 
 		for(int i = 0; p != NULL; i++)
 		{
-			ip[i] = p;
-			p = strtok(NULL, ".");
-		}
-
-		p = strtok(ipPointer, ".");
-
-		for(int i = 0; p != NULL; i++)
-		{
-			ip[i] = p;
-			p = strtok(NULL, ".");
-		}
-
-		p = strtok(ipPointer, ".");
-
-		for(int i = 0; p != NULL; i++)
-		{
-			ip[i] = p;
+			ip[i] = atoi(p);
 			p = strtok(NULL, ".");
 		}
 
@@ -840,7 +823,7 @@ void configNetwork()
 
 		for(int i = 0; p != NULL; i++)
 		{
-			mask[i] = p;
+			mask[i] = atoi(p);
 			p = strtok(NULL, ".");
 		}
 
@@ -848,7 +831,7 @@ void configNetwork()
 
 		for(int i = 0; p != NULL; i++)
 		{
-			gateway[i] = p;
+			gateway[i] = atoi(p);
 			p = strtok(NULL, ".");
 		}
 
@@ -856,7 +839,7 @@ void configNetwork()
 
 		for(int i = 0; p != NULL; i++)
 		{
-			dns1[i] = p;
+			dns1[i] = atoi(p);
 			p = strtok(NULL, ".");
 		}
 
@@ -864,27 +847,20 @@ void configNetwork()
 
 		for(int i = 0; p != NULL; i++)
 		{
-			dns2[i] = p;
+			dns2[i] = atoi(p);
 			p = strtok(NULL, ".");
 		}
 
-	  	gWIZNETINFO.ip[0] = 192;
-	  	gWIZNETINFO.ip[1] = 168;
-	  	gWIZNETINFO.ip[2] = 0;
-	  	gWIZNETINFO.ip[3] = 231;
-	  	/*gWIZNETINFO.gw[0] = gateway[0];
-	  	gWIZNETINFO.gw[1] = gateway[1];
-	  	gWIZNETINFO.gw[2] = gateway[2];
-	  	gWIZNETINFO.gw[3] = gateway[3];
-	  	gWIZNETINFO.dns[0] = dns1[0];
-	  	gWIZNETINFO.dns[1] = dns1[1];
-	  	gWIZNETINFO.dns[2] = dns1[2];
-	  	gWIZNETINFO.dns[3] = dns1[3];
-	  	gWIZNETINFO.sn[0] = mask[0];
-	  	gWIZNETINFO.sn[1] = mask[1];
-	  	gWIZNETINFO.sn[2] = mask[2];
-	  	gWIZNETINFO.sn[3] = mask[3];*/
-	  	gWIZNETINFO.mac[0] =  gWIZNETINFO.mac[0] + 0x01;
+		port = atoi(portPointer);
+
+		wiz_NetInfo wizNet = { .mac = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED},
+				.ip = {ip[0], ip[1], ip[2], ip[3]},
+				.sn = {mask[0], mask[1], mask[2], mask[3]},
+				.gw = {gateway[0], gateway[1], gateway[2], gateway[3]},
+				.dns = {dns1[0], dns1[1], dns1[2], dns1[3]},
+				.dhcp = NETINFO_STATIC };
+
+		gWIZNETINFO = wizNet;
 
 	  	HAL_GPIO_WritePin(Rst_GPIO_Port, Rst_Pin, GPIO_PIN_RESET);
 	  	HAL_Delay(500);
@@ -931,7 +907,7 @@ void StartEthernet(void *argument)
   {
 	  for(i=4;i<_WIZCHIP_SOCK_NUM_;i++)
 	  {
-	  	tcp_http_mt(i, gDATABUF, 80);
+	  	tcp_http_mt(i, gDATABUF, port);
 	  }
 	  //4 sockets para modbus TCP
 	  for(i=0;i<4;i++)
