@@ -100,7 +100,7 @@ uint8_t config_data[300];
 
 uint8_t inputs[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 uint8_t ip[4], mask[4], gateway[4], dns1[4], dns2[4], port = 80;
-char ipStr[] = {'1','9','2','.','1','6','8','.','0','0','0','.','2','3','1'};
+char ipStr[15];
 ///////////////////////////////////
 // Default Network Configuration //
 ///////////////////////////////////
@@ -877,7 +877,28 @@ void configNetwork()
 	  	HAL_GPIO_WritePin(Rst_GPIO_Port, Rst_Pin, GPIO_PIN_SET);
 	  	HAL_Delay(50);
 	}
+	else
+	{
+		ip[0] = gWIZNETINFO.ip[0];
+		ip[1] = gWIZNETINFO.ip[1];
+		ip[2] = gWIZNETINFO.ip[2];
+		ip[3] = gWIZNETINFO.ip[3];
+	}
 
+	uint8_t aux;
+	int c = 14;
+	ipStr[3] = '.';
+	ipStr[7] = '.';
+	ipStr[11] = '.';
+	for(int j = 3; j >= 0; j --)
+	{
+		for(int i = 0; i < 3; i++)
+		{
+			ipStr[c - i] = ip[j] % 10 + '0';
+			ip[j] /= 10;
+		}
+		c -= 4;
+	}
 	/* Chip selection call back */
 	reg_wizchip_cs_cbfunc(wizchip_select, wizchip_deselect);
 
