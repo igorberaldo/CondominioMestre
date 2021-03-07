@@ -100,7 +100,7 @@ uint8_t config_data[300];
 
 uint8_t inputs[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 uint8_t ip[4], mask[4], gateway[4], dns1[4], dns2[4], port = 80;
-
+char ipStr[] = {'1','9','2','.','1','6','8','.','0','0','0','.','2','3','1'};
 ///////////////////////////////////
 // Default Network Configuration //
 ///////////////////////////////////
@@ -550,11 +550,15 @@ int32_t tcp_http_mt(uint8_t sn, uint8_t* buf, uint16_t port)
 							strcat((char*)buf, "</center></form>");
 
 							strcat((char*)buf, "<script>function configNet() {");
-							strcat((char*)buf, "window.open('http://192.168.0.231/ip:' + document.getElementById('ip').value + ',mask:' + document.getElementById('mascara').value + ',port:' +");
+							strcat((char*)buf, "window.open('http://");
+							strcat((char*)buf, &ipStr);
+							strcat((char*)buf, "/ip:' + document.getElementById('ip').value + ',mask:' + document.getElementById('mascara').value + ',port:' +");
 							strcat((char*)buf, "document.getElementById('porta').value + ',gateway:' + document.getElementById('gateway').value + ',dns1:' + document.getElementById('dns1').value +");
 							strcat((char*)buf, "',dns2:' + document.getElementById('dns2').value, '_self');}</script>");
 
-							strcat((char*)buf, "<center><button onClick = 'configNet()'>Salvar</button><br><br><a href='http://192.168.0.231'>Voltar</a><br></center>");
+							strcat((char*)buf, "<center><button onClick = 'configNet()'>Salvar</button><br><br><a href='http://");
+							strcat((char*)buf, &ipStr);
+							strcat((char*)buf, "'>Voltar</a><br></center>");
 
 							strcat((char*)buf, "</body>");
 							strcat((char*)buf, "</html>");
@@ -615,7 +619,9 @@ int32_t tcp_http_mt(uint8_t sn, uint8_t* buf, uint16_t port)
 							strcat((char*)buf, "<tr><td>16: <input type='text' name='ipDestino16'></td>");
 							strcat((char*)buf, "<td><input type='text' name='releDestino16'></td></tr>");
 
-							strcat((char*)buf, "</table><br><button>Salvar</button><br><br><a href='http://192.168.0.231'>Voltar</a><br></center>");
+							strcat((char*)buf, "</table><br><button>Salvar</button><br><br><a href='http://");
+							strcat((char*)buf, &ipStr);
+							strcat((char*)buf, "'>Voltar</a><br></center>");
 
 							strcat((char*)buf, "</body>");
 							strcat((char*)buf, "</html>");
@@ -630,8 +636,12 @@ int32_t tcp_http_mt(uint8_t sn, uint8_t* buf, uint16_t port)
 							strcat((char*)buf, "<div class = 'entradas'>");
 
 							strcat((char*)buf, "<b><center>Menus para configuracao</b><br><br>");
-							strcat((char*)buf, "<a href='http://192.168.0.231/rede'>Configurar rede</a><br><br>");
-							strcat((char*)buf, "<a href='http://192.168.0.231/interfaces'>Configurar interfaces\n</a><br>");
+							strcat((char*)buf, "<a href='http://");
+							strcat((char*)buf, &ipStr);
+							strcat((char*)buf,"/rede'>Configurar rede</a><br><br>");
+							strcat((char*)buf, "<a href='http://");
+							strcat((char*)buf, &ipStr);
+							strcat((char*)buf, "/interfaces'>Configurar interfaces\n</a><br>");
 
 							strcat((char*)buf, "</div>");
 							strcat((char*)buf, "</body>");
