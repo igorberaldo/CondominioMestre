@@ -1,5 +1,5 @@
 Drivers/ETHERNET/scr/delay.o: ../Drivers/ETHERNET/scr/delay.c \
- C:/Users/beral/Desktop/mestre/Drivers/ETHERNET/inc/delay.h \
+ C:/Users/danie/Desktop/cond/CondominioMestre/Drivers/ETHERNET/inc/delay.h \
  ../Core/Inc/main.h ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h \
  ../Core/Inc/stm32f1xx_hal_conf.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h \
@@ -27,7 +27,7 @@ Drivers/ETHERNET/scr/delay.o: ../Drivers/ETHERNET/scr/delay.c \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 
-C:/Users/beral/Desktop/mestre/Drivers/ETHERNET/inc/delay.h:
+C:/Users/danie/Desktop/cond/CondominioMestre/Drivers/ETHERNET/inc/delay.h:
 
 ../Core/Inc/main.h:
 

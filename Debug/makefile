@@ -59,8 +59,8 @@ all: main-build
 main-build: libertyMestre.elf secondary-outputs
 
 # Tool invocations
-libertyMestre.elf: $(OBJS) $(USER_OBJS) C:\Users\beral\Desktop\mestre\STM32F103C8TX_FLASH.ld
-	arm-none-eabi-gcc -o "libertyMestre.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\beral\Desktop\mestre\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="libertyMestre.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+libertyMestre.elf: $(OBJS) $(USER_OBJS) C:\Users\danie\Desktop\cond\CondominioMestre\STM32F103C8TX_FLASH.ld
+	arm-none-eabi-gcc -o "libertyMestre.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\danie\Desktop\cond\CondominioMestre\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="libertyMestre.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

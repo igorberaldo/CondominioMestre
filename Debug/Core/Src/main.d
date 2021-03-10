@@ -34,9 +34,9 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h \
  ../Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM3/portmacro.h \
  ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h \
- C:/Users/beral/Desktop/mestre/Drivers/ETHERNET/inc/socket.h \
- C:/Users/beral/Desktop/mestre/Drivers/ETHERNET/inc/wizchip_conf.h \
- C:/Users/beral/Desktop/mestre/Drivers/ETHERNET/inc/w5500.h
+ C:/Users/danie/Desktop/cond/CondominioMestre/Drivers/ETHERNET/inc/socket.h \
+ C:/Users/danie/Desktop/cond/CondominioMestre/Drivers/ETHERNET/inc/wizchip_conf.h \
+ C:/Users/danie/Desktop/cond/CondominioMestre/Drivers/ETHERNET/inc/w5500.h
 
 ../Core/Inc/main.h:
 
@@ -110,8 +110,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 
 ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h:
 
-C:/Users/beral/Desktop/mestre/Drivers/ETHERNET/inc/socket.h:
+C:/Users/danie/Desktop/cond/CondominioMestre/Drivers/ETHERNET/inc/socket.h:
 
-C:/Users/beral/Desktop/mestre/Drivers/ETHERNET/inc/wizchip_conf.h:
+C:/Users/danie/Desktop/cond/CondominioMestre/Drivers/ETHERNET/inc/wizchip_conf.h:
 
-C:/Users/beral/Desktop/mestre/Drivers/ETHERNET/inc/w5500.h:
+C:/Users/danie/Desktop/cond/CondominioMestre/Drivers/ETHERNET/inc/w5500.h:
