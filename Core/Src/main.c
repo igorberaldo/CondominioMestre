@@ -44,7 +44,8 @@
 #define W5500_rx() W5500_rxtx(0xff)
 #define W5500_tx(data) W5500_rxtx(data)
 
-#define FLASH_STORAGE 0x0800A000
+#define NETWORK_STORAGE 0x0800A000
+#define	INTERFACE_STORAGE 0x0800C000
 #define page_size 0x800
 /* USER CODE END PD */
 
@@ -141,8 +142,8 @@ uint8_t wizchip_read();
 void network_init(void);								// Initialize Network information and display it
 int32_t tcp_http_mt(uint8_t, uint8_t*, uint16_t);		// Multythread TCP server
 void HTTP_reset(uint8_t sockn);
-void read_flash(uint8_t* data);		//Reads data from the flash memory
-void save_to_flash(uint8_t* data);		//Writes data to the flash memory
+void read_flash(uint8_t* data, uint32_t ADDRESS);		//Reads data from the flash memory
+void save_to_flash(uint8_t* data, uint32_t ADDRESS);		//Writes data to the flash memory
 uint8_t *strremove(uint8_t *str, const uint8_t *sub);
 void configNetwork();
 /* USER CODE END PFP */
@@ -527,8 +528,19 @@ int32_t tcp_http_mt(uint8_t sn, uint8_t* buf, uint16_t port)
 					{
 						memset(config_data, 0, sizeof(config_data));
 						strcpy(config_data, url);
-						save_to_flash(config_data);
+						save_to_flash(config_data, NETWORK_STORAGE);
 						configNetwork();
+					}
+					if(strncmp("/interfaces2/ip", url, 14) == 0)
+					{
+						memset(config_data, 0, sizeof(config_data));
+						strcpy(config_data, url);
+						save_to_flash(config_data, INTERFACE_STORAGE);
+					}
+					if(strncmp("/con/ip", url, 7) == 0)
+					{
+						strcat(config_data, url);
+						save_to_flash(config_data, INTERFACE_STORAGE);
 					}
 
 					//Gera��o da HTML
@@ -563,7 +575,7 @@ int32_t tcp_http_mt(uint8_t sn, uint8_t* buf, uint16_t port)
 							strcat((char*)buf, "</body>");
 							strcat((char*)buf, "</html>");
 						}
-						else if(strncmp("/interfaces", url, 6) == 0)
+						else if(strncmp("/interfaces1", url, 12) == 0)
 						{
 							strcpy((char*)buf,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n");
 							strcat((char*)buf, "<html><head><title>Escrava Config</title>");
@@ -571,60 +583,97 @@ int32_t tcp_http_mt(uint8_t sn, uint8_t* buf, uint16_t port)
 							strcat((char*)buf, "<td><b>Entrada / IP da placa destino</b></td>");
 							strcat((char*)buf, "<td><b>Rele da placa destino</b></td></tr>");
 
-							strcat((char*)buf, "<tr><td>1:  <input type='text' name='ipDestino1'></td>");
-							strcat((char*)buf, "<td><input type='text' name='releDestino1'></td></tr>");
+							strcat((char*)buf, "<tr><td>1:  <input type='text' id='ip1'></td>");
+							strcat((char*)buf, "<td><input type='text' id='r1'></td></tr>");
 
-							strcat((char*)buf, "<tr><td>2:  <input type='text' name='ipDestino2'></td>");
-							strcat((char*)buf, "<td><input type='text' name='releDestino2'></td></tr>");
+							strcat((char*)buf, "<tr><td>2:  <input type='text' id='ip2'></td>");
+							strcat((char*)buf, "<td><input type='text' id='r2'></td></tr>");
 
-							strcat((char*)buf, "<tr><td>3:  <input type='text' name='ipDestino3'></td>");
-							strcat((char*)buf, "<td><input type='text' name='releDestino3'></td></tr>");
+							strcat((char*)buf, "<tr><td>3:  <input type='text' id='ip3'></td>");
+							strcat((char*)buf, "<td><input type='text' id='r3'></td></tr>");
 
-							strcat((char*)buf, "<tr><td>4:  <input type='text' name='ipDestino4'></td>");
-							strcat((char*)buf, "<td><input type='text' name='releDestino4'></td></tr>");
+							strcat((char*)buf, "<tr><td>4:  <input type='text' id='ip4'></td>");
+							strcat((char*)buf, "<td><input type='text' id='r4'></td></tr>");
 
-							strcat((char*)buf, "<tr><td>5:  <input type='text' name='ipDestino5'></td>");
-							strcat((char*)buf, "<td><input type='text' name='releDestino5'></td></tr>");
+							strcat((char*)buf, "<tr><td>5:  <input type='text' id='ip5'></td>");
+							strcat((char*)buf, "<td><input type='text' id='r5'></td></tr>");
 
-							strcat((char*)buf, "<tr><td>6:  <input type='text' name='ipDestino6'></td>");
-							strcat((char*)buf, "<td><input type='text' name='releDestino6'></td></tr>");
+							strcat((char*)buf, "<tr><td>6:  <input type='text' id='ip6'></td>");
+							strcat((char*)buf, "<td><input type='text' id='r6'></td></tr>");
 
-							strcat((char*)buf, "<tr><td>7:  <input type='text' name='ipDestino7'></td>");
-							strcat((char*)buf, "<td><input type='text' name='releDestino7'></td></tr>");
+							strcat((char*)buf, "<tr><td>7:  <input type='text' id='ip7'></td>");
+							strcat((char*)buf, "<td><input type='text' id='r7'></td></tr>");
 
-							strcat((char*)buf, "<tr><td>8:  <input type='text' name='ipDestino8'></td>");
-							strcat((char*)buf, "<td><input type='text' name='releDestino8'></td></tr>");
+							strcat((char*)buf, "<tr><td>8:  <input type='text' id='ip8'></td>");
+							strcat((char*)buf, "<td><input type='text' id='r8'></td></tr></table><br>");
 
-							strcat((char*)buf, "<tr><td>9:  <input type='text' name='ipDestino9'></td>");
-							strcat((char*)buf, "<td><input type='text' name='releDestino9'></td></tr>");
+							strcat((char*)buf, "<script>function configInt() {");
+							strcat((char*)buf, "window.open('http://");
+							strcat((char*)buf, &ipStr);
+							strcat((char*)buf, "/interfaces2/ip1:' + document.getElementById('ip1').value + ',ip2:' + document.getElementById('ip2').value + ',ip3:' +");
+							strcat((char*)buf, "document.getElementById('ip3').value + ',ip4:' + document.getElementById('ip4').value + ',ip5:' + document.getElementById('ip5').value +");
+							strcat((char*)buf, "',ip6:' + document.getElementById('ip6').value + ',ip7:' + document.getElementById('ip7').value + ',ip8:' + document.getElementById('ip8').value");
+							strcat((char*)buf, "+ ',r1:' + document.getElementById('r1').value + ',r2:' + document.getElementById('r2').value ");
+							strcat((char*)buf, "+ ',r3:' + document.getElementById('r3').value + ',r4:' + document.getElementById('r4').value ");
+							strcat((char*)buf, "+ ',r5:' + document.getElementById('r5').value + ',r6:' + document.getElementById('r6').value ");
+							strcat((char*)buf, "+ ',r7:' + document.getElementById('r7').value + ',r8:' + document.getElementById('r8').value, '_self');}</script>");
 
-							strcat((char*)buf, "<tr><td>10: <input type='text' name='ipDestino10'></td>");
-							strcat((char*)buf, "<td><input type='text' name='releDestino10'></td></tr>");
-
-							strcat((char*)buf, "<tr><td>11: <input type='text' name='ipDestino11'></td>");
-							strcat((char*)buf, "<td><input type='text' name='releDestino11'></td></tr>");
-
-							strcat((char*)buf, "<tr><td>12: <input type='text' name='ipDestino12'></td>");
-							strcat((char*)buf, "<td><input type='text' name='releDestino12'></td></tr>");
-
-							strcat((char*)buf, "<tr><td>13: <input type='text' name='ipDestino13'></td>");
-							strcat((char*)buf, "<td><input type='text' name='releDestino13'></td></tr>");
-
-							strcat((char*)buf, "<tr><td>14: <input type='text' name='ipDestino14'></td>");
-							strcat((char*)buf, "<td><input type='text' name='releDestino14'></td></tr>");
-
-							strcat((char*)buf, "<tr><td>15: <input type='text' name='ipDestino15'></td>");
-							strcat((char*)buf, "<td><input type='text' name='releDestino15'></td></tr>");
-
-							strcat((char*)buf, "<tr><td>16: <input type='text' name='ipDestino16'></td>");
-							strcat((char*)buf, "<td><input type='text' name='releDestino16'></td></tr>");
-
-							strcat((char*)buf, "</table><br><button>Salvar</button><br><br><a href='http://");
+							strcat((char*)buf, "<button onClick='configInt()'>Salvar</button><br><br><a href='http://");
 							strcat((char*)buf, &ipStr);
 							strcat((char*)buf, "'>Voltar</a><br></center>");
 
 							strcat((char*)buf, "</body>");
 							strcat((char*)buf, "</html>");
+						}
+						else if(strncmp("/interfaces2", url, 12) == 0)
+						{
+							strcpy((char*)buf,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n");
+							strcat((char*)buf, "<html><head><title>Escrava Config</title>");
+							strcat((char*)buf, "<center><table border='1'><tr>");
+							strcat((char*)buf, "<td><b>Entrada / IP da placa destino</b></td>");
+							strcat((char*)buf, "<td><b>Rele da placa destino</b></td></tr>");
+
+							strcat((char*)buf, "<tr><td>9:  <input type='text' id='ip9'></td>");
+							strcat((char*)buf, "<td><input type='text' id='r9'></td></tr>");
+
+							strcat((char*)buf, "<tr><td>10:  <input type='text' id='ip10'></td>");
+							strcat((char*)buf, "<td><input type='text' id='r10'></td></tr>");
+
+							strcat((char*)buf, "<tr><td>11:  <input type='text' id='ip11'></td>");
+							strcat((char*)buf, "<td><input type='text' id='r11'></td></tr>");
+
+							strcat((char*)buf, "<tr><td>12:  <input type='text' id='ip12'></td>");
+							strcat((char*)buf, "<td><input type='text' id='r12'></td></tr>");
+
+							strcat((char*)buf, "<tr><td>13:  <input type='text' id='ip13'></td>");
+							strcat((char*)buf, "<td><input type='text' id='r13'></td></tr>");
+
+							strcat((char*)buf, "<tr><td>14:  <input type='text' id='ip14'></td>");
+							strcat((char*)buf, "<td><input type='text' id='r14'></td></tr>");
+
+							strcat((char*)buf, "<tr><td>15:  <input type='text' id='ip15'></td>");
+							strcat((char*)buf, "<td><input type='text' id='r15'></td></tr>");
+
+							strcat((char*)buf, "<tr><td>16:  <input type='text' id='ip16'></td>");
+							strcat((char*)buf, "<td><input type='text' id='r16'></td></tr></table><br>");
+
+							strcat((char*)buf, "<script>function configInt() {");
+							strcat((char*)buf, "window.open('http://");
+							strcat((char*)buf, &ipStr);
+							strcat((char*)buf, "/con/ip9:' + document.getElementById('ip9').value + ',ip10:' + document.getElementById('ip10').value + ',ip11:' +");
+							strcat((char*)buf, "document.getElementById('ip11').value + ',ip12:' + document.getElementById('ip12').value + ',ip13:' + document.getElementById('ip13').value +");
+							strcat((char*)buf, "',ip14:' + document.getElementById('ip14').value + ',ip15:' + document.getElementById('ip15').value + ',ip16' + document.getElementById('ip16').value");
+							strcat((char*)buf, "+ ',r9:' + document.getElementById('r9').value + ',r10:' + document.getElementById('r10').value ");
+							strcat((char*)buf, "+ ',r11:' + document.getElementById('r11').value + ',r12:' + document.getElementById('r12').value ");
+							strcat((char*)buf, "+ ',r13:' + document.getElementById('r13').value + ',r14:' + document.getElementById('r14').value ");
+							strcat((char*)buf, "+ ',r15:' + document.getElementById('r15').value + ',r16:' + document.getElementById('r16').value, '_self');}</script>");
+							strcat((char*)buf, "<button onClick='configInt()'>Salvar</button><br><br><a href='http://");
+							strcat((char*)buf, &ipStr);
+							strcat((char*)buf, "'>Voltar</a><br></center>");
+
+							strcat((char*)buf, "</body>");
+							strcat((char*)buf, "</html>");
+
 						}
 						else
 						{
@@ -641,7 +690,7 @@ int32_t tcp_http_mt(uint8_t sn, uint8_t* buf, uint16_t port)
 							strcat((char*)buf,"/rede'>Configurar rede</a><br><br>");
 							strcat((char*)buf, "<a href='http://");
 							strcat((char*)buf, &ipStr);
-							strcat((char*)buf, "/interfaces'>Configurar interfaces\n</a><br>");
+							strcat((char*)buf, "/interfaces1'>Configurar interfaces\n</a><br>");
 
 							strcat((char*)buf, "</div>");
 							strcat((char*)buf, "</body>");
@@ -702,7 +751,7 @@ int32_t tcp_http_mt(uint8_t sn, uint8_t* buf, uint16_t port)
    return 1;
 }
 
-void save_to_flash(uint8_t *data)
+void save_to_flash(uint8_t *data, uint32_t ADDRESS)
 {
 	volatile uint32_t data_to_FLASH[(strlen((char*)data)/4)	+ (int)((strlen((char*)data) % 4) != 0)];
 	memset((uint8_t*)data_to_FLASH, 0, strlen((char*)data_to_FLASH));
@@ -721,7 +770,7 @@ void save_to_flash(uint8_t *data)
 	  /* Fill EraseInit structure*/
 	  FLASH_EraseInitTypeDef EraseInitStruct;
 	  EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;
-	  EraseInitStruct.PageAddress = FLASH_STORAGE;
+	  EraseInitStruct.PageAddress = ADDRESS;
 	  EraseInitStruct.NbPages = pages;
 	  uint32_t PageError;
 
@@ -733,7 +782,7 @@ void save_to_flash(uint8_t *data)
 	  {
 		  if (status == HAL_OK)
 		  {
-			  status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, FLASH_STORAGE+write_cnt, data_to_FLASH[index]);
+			  status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, ADDRESS+write_cnt, data_to_FLASH[index]);
 			  if(status == HAL_OK)
 			  {
 				  write_cnt += 4;
@@ -746,13 +795,13 @@ void save_to_flash(uint8_t *data)
 	  HAL_FLASH_Lock();
 }
 
-void read_flash(uint8_t* data)
+void read_flash(uint8_t* data, uint32_t ADDRESS)
 {
 	volatile uint32_t read_data;
 	volatile uint32_t read_cnt=0;
 	do
 	{
-		read_data = *(uint32_t*)(FLASH_STORAGE + read_cnt);
+		read_data = *(uint32_t*)(ADDRESS + read_cnt);
 		if(read_data != 0xFFFFFFFF)
 		{
 			data[read_cnt] = (uint8_t)read_data;
@@ -781,7 +830,7 @@ void configNetwork()
 {
 	uint8_t i;
 	uint8_t memsize[2][8] = {{2,2,2,2,2,2,2,2},{2,2,2,2,2,2,2,2}};
-	read_flash(config_data);
+	read_flash(config_data, NETWORK_STORAGE);
 	if(config_data[0] == '/' && config_data[1] == 'i' && config_data[2] == 'p')
 	{
 		strremove(config_data, "/ip:");
