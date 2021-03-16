@@ -44,8 +44,8 @@
 #define W5500_rx() W5500_rxtx(0xff)
 #define W5500_tx(data) W5500_rxtx(data)
 
-#define NETWORK_STORAGE 0x0800A000
-#define	INTERFACE_STORAGE 0x0800C000
+#define NETWORK_STORAGE 0x0800C000
+#define	INTERFACE_STORAGE 0x0800D000
 #define page_size 0x800
 /* USER CODE END PD */
 
@@ -146,6 +146,7 @@ void read_flash(uint8_t* data, uint32_t ADDRESS);		//Reads data from the flash m
 void save_to_flash(uint8_t* data, uint32_t ADDRESS);		//Writes data to the flash memory
 uint8_t *strremove(uint8_t *str, const uint8_t *sub);
 void configNetwork();
+void configInterfaces();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -184,6 +185,7 @@ int main(void)
   MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
   configNetwork();
+  configInterfaces();
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -618,7 +620,7 @@ int32_t tcp_http_mt(uint8_t sn, uint8_t* buf, uint16_t port)
 							strcat((char*)buf, "+ ',r5:' + document.getElementById('r5').value + ',r6:' + document.getElementById('r6').value ");
 							strcat((char*)buf, "+ ',r7:' + document.getElementById('r7').value + ',r8:' + document.getElementById('r8').value, '_self');}</script>");
 
-							strcat((char*)buf, "<button onClick='configInt()'>Salvar</button><br><br><a href='http://");
+							strcat((char*)buf, "<button onClick='configInt()'>Proximo</button><br><br><a href='http://");
 							strcat((char*)buf, &ipStr);
 							strcat((char*)buf, "'>Voltar</a><br></center>");
 
@@ -968,6 +970,159 @@ void configNetwork()
 	//all connections inactive
 	for(i=0;i<_WIZCHIP_SOCK_NUM_;i++)
 		HTTP_reset(i);
+}
+
+void configInterfaces()
+{
+	read_flash(config_data, INTERFACE_STORAGE);
+	if(config_data[0] == '/' && config_data[1] == 'i' && config_data[2] == 'n')
+	{
+		strremove(config_data, "/interfaces2/");
+		strremove(config_data, "/con/");
+		strremove(config_data, "ip1:");
+		strremove(config_data, "ip2:");
+		strremove(config_data, "ip3:");
+		strremove(config_data, "ip4:");
+		strremove(config_data, "ip5:");
+		strremove(config_data, "ip6:");
+		strremove(config_data, "ip7:");
+		strremove(config_data, "ip8:");
+		strremove(config_data, "ip9:");
+		strremove(config_data, "ip10:");
+		strremove(config_data, "ip11:");
+		strremove(config_data, "ip12:");
+		strremove(config_data, "ip13:");
+		strremove(config_data, "ip14:");
+		strremove(config_data, "ip15:");
+		strremove(config_data, "ip16:");
+		strremove(config_data, "r1:");
+		strremove(config_data, "r2:");
+		strremove(config_data, "r3:");
+		strremove(config_data, "r4:");
+		strremove(config_data, "r5:");
+		strremove(config_data, "r6:");
+		strremove(config_data, "r7:");
+		strremove(config_data, "r8:");
+		strremove(config_data, "r9:");
+		strremove(config_data, "r10:");
+		strremove(config_data, "r11:");
+		strremove(config_data, "r12:");
+		strremove(config_data, "r13:");
+		strremove(config_data, "r14:");
+		strremove(config_data, "r15:");
+		strremove(config_data, "r16:");
+
+		uint8_t *ip1, *ip2, *ip3, *ip4, *ip5, *ip6, *ip7, *ip8, *ip9, *ip10, *ip11, *ip12, *ip13, *ip14, *ip15, *ip16;
+		uint8_t *r1, *r2, *r3, *r4, *r5, *r6, *r7, *r8, *r9, *r10, *r11, *r12, *r13, *r14, *r15, *r16, *p;
+
+		p = strtok(config_data, ",");
+
+		for(int i = 0; p != NULL; i++)
+		{
+			switch(i)
+			{
+				case 0:
+					ip1 = p;
+					break;
+				case 1:
+					ip2 = p;
+					break;
+				case 2:
+					ip3= p;
+					break;
+				case 3:
+					ip4 = p;
+					break;
+				case 4:
+					ip5 = p;
+					break;
+				case 5:
+					ip6 = p;
+					break;
+				case 6:
+					ip7 = p;
+					break;
+				case 7:
+					ip8 = p;
+					break;
+				case 8:
+					r1 = p;
+					break;
+				case 9:
+					r2 = p;
+					break;
+				case 10:
+					r3 = p;
+					break;
+				case 11:
+					r4 = p;
+					break;
+				case 12:
+					r5 = p;
+					break;
+				case 13:
+					r6 = p;
+					break;
+				case 14:
+					r7 = p;
+					break;
+				case 15:
+					r8 = p;
+					break;
+				case 16:
+					ip9 = p;
+					break;
+				case 17:
+					ip10 = p;
+					break;
+				case 18:
+					ip11 = p;
+					break;
+				case 19:
+					ip12 = p;
+					break;
+				case 20:
+					ip13 = p;
+					break;
+				case 21:
+					ip14 = p;
+					break;
+				case 22:
+					ip15 = p;
+					break;
+				case 23:
+					ip16 = p;
+					break;
+				case 24:
+					r9 = p;
+					break;
+				case 25:
+					r10 = p;
+					break;
+				case 26:
+					r11 = p;
+					break;
+				case 27:
+					r12 = p;
+					break;
+				case 28:
+					r13 = p;
+					break;
+				case 29:
+					r14 = p;
+					break;
+				case 30:
+					r15 = p;
+					break;
+				case 31:
+					r16 = p;
+					break;
+				default:
+					break;
+			}
+			p = strtok(NULL, ",");
+		}
+	}
 }
 /* USER CODE END 4 */
 
